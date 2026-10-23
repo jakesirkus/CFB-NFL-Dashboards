@@ -1,0 +1,390 @@
+{
+"401858429": {
+"Toledo": 20,
+"Michigan State": 30
+},
+"401862699": {
+"Florida International": 9,
+"South Florida": 19
+},
+"401868140": {
+"Eastern Kentucky": 7,
+"Jacksonville State": 49
+},
+"401856790": {
+"UCF": 7,
+"Pittsburgh": 12
+},
+"401860881": {
+"Memphis": 20,
+"Boise State": 38
+},
+"401862702": {
+"South Florida": 28,
+"Army": 24
+},
+"401864502": {
+"North Dakota State": 38,
+"Air Force": 32
+},
+"401864505": {
+"Texas Southern": 10,
+"UTEP": 51
+},
+"401858230": {
+"SMU": 31,
+"Louisville": 41
+},
+"401867805": {
+"Brown": 17,
+"New Haven": 10
+},
+"401867817": {
+"Lafayette": 34,
+"Columbia": 40
+},
+"401867991": {
+"Pennsylvania": 20,
+"Bucknell": 7
+},
+"401868130": {
+"Northeastern State": 17,
+"Northern Colorado": 23
+},
+"401868159": {
+"Southern Utah": 26,
+"St. Thomas (MN)": 28
+},
+"401868237": {
+"Merrimack": 20,
+"Tarleton State": 45
+},
+"401868397": {
+"VMI": 24,
+"Davidson": 27
+},
+"401869147": {
+"Houston Christian": 23,
+"Incarnate Word": 30
+},
+"401858238": {
+"Central Michigan": 3,
+"Miami": 52
+},
+"401864579": {
+"New Mexico": 42,
+"New Mexico State": 18
+},
+"401867687": {
+"Norfolk State": 43,
+"Chicago State": 20
+},
+"401867818": {
+"Columbia": 20,
+"Georgetown": 17
+},
+"401867909": {
+"Long Island University": 3,
+"Florida International": 20
+},
+"401868034": {
+"Lehigh": 20,
+"Pennsylvania": 7
+},
+"401868179": {
+"Eastern Illinois": 7,
+"South Dakota State": 42
+},
+"401868188": {
+"Gardner-Webb": 35,
+"Marshall": 36
+},
+"401868358": {
+"Texas Southern": 40,
+"Alcorn State": 43
+},
+"401858246": {
+"Boston College": 16,
+"SMU": 25
+},
+"401860899": {
+"Oregon State": 56,
+"Colorado State": 26
+},
+"401866431": {
+"Toledo": 39,
+"Ball State": 24
+},
+"401868086": {
+"Eastern Washington": 38,
+"UC Davis": 49
+},
+"401868220": {
+"Davidson": 14,
+"San Diego": 63
+},
+"401868375": {
+"Wofford": 32,
+"Furman": 25
+},
+"401869942": {
+"Georgia Southern": 31,
+"Coastal Carolina": 24
+},
+"401858259": {
+"Virginia Tech": 20,
+"California": 25
+},
+"401869933": {
+"Arkansas State": 49,
+"South Alabama": 56
+},
+"401869844": {
+"Coastal Carolina": 32,
+"App State": 35
+},
+"401858261": {
+"Clemson": 37,
+"Charleston Southern": 0
+},
+"401858262": {
+"Stanford": 34,
+"Elon": 7
+},
+"401860903": {
+"Oregon State": 48,
+"Washington State": 30
+},
+"401856809": {
+"BYU": 28,
+"Notre Dame": 24
+},
+"401860923": {
+"Texas State": 66,
+"Colorado State": 27
+},
+"401856828": {
+"Texas Tech": 53,
+"Arizona State": 25
+},
+"401856829": {
+"West Virginia": 45,
+"Cincinnati": 42
+},
+"401856830": {
+"Kansas State": 35,
+"Kansas": 24
+},
+"401856831": {
+"Houston": 35,
+"Oklahoma State": 32
+},
+"401856832": {
+"Baylor": 6,
+"TCU": 17
+},
+"401864520": {
+"North Dakota State": 31,
+"Nevada": 17
+},
+"401864522": {
+"Wyoming": 41,
+"Northern Illinois": 23
+},
+"401864523": {
+"UTEP": 11,
+"San Jos\u00e9 State": 24
+},
+"401864524": {
+"Air Force": 41,
+"UNLV": 31
+},
+"401869934": {
+"Southern Miss": 13,
+"Arkansas State": 23
+},
+"401869950": {
+"Old Dominion": 15,
+"Georgia Southern": 23
+},
+"401869957": {
+"James Madison": 49,
+"Georgia State": 22
+},
+"401869966": {
+"Louisiana": 33,
+"Troy": 6
+},
+"401862800": {
+"UAB": 30,
+"East Carolina": 17
+},
+"401862802": {
+"Army": 56,
+"Florida Atlantic": 24
+},
+"401862803": {
+"Temple": 31,
+"Charlotte": 38
+},
+"401862804": {
+"UTSA": 38,
+"Navy": 34
+},
+"401862805": {
+"Rice": 17,
+"Tulsa": 38
+},
+"401862801": {
+"Tulane": 31,
+"Memphis": 17
+},
+"401862806": {
+"South Florida": 29,
+"Kent State": 2
+},
+"401858488": {
+"Indiana": 15,
+"Ohio State": 19
+},
+"401858489": {
+"Maryland": 30,
+"Rutgers": 37
+},
+"401858490": {
+"Michigan": 21,
+"Penn State": 18
+},
+"401858491": {
+"Michigan State": 21,
+"Northwestern": 24
+},
+"401858493": {
+"Purdue": 26,
+"Washington": 38
+},
+"401858494": {
+"UCLA": 17,
+"Wisconsin": 7
+},
+"401866441": {
+"Bowling Green": 31,
+"Ball State": 32
+},
+"401866442": {
+"Buffalo": 25,
+"Massachusetts": 18
+},
+"401866443": {
+"Central Michigan": 14,
+"Western Michigan": 21
+},
+"401866444": {
+"Eastern Michigan": 14,
+"Toledo": 34
+},
+"401871053": {
+"Jacksonville State": 27,
+"Florida International": 24
+},
+"401856719": {
+"Georgia": 24,
+"Auburn": 27
+},
+"401856720": {
+"LSU": 31,
+"Mississippi State": 0
+},
+"401856721": {
+"Ole Miss": 31,
+"Missouri": 3
+},
+"401856722": {
+"Oklahoma": 13,
+"Kentucky": 21
+},
+"401856723": {
+"Tennessee": 26,
+"Alabama": 10
+},
+"401856724": {
+"Texas": 24,
+"Florida": 27
+},
+"401856725": {
+"Texas A&M": 41,
+"The Citadel": 0
+},
+"401856726": {
+"Vanderbilt": 21,
+"Arkansas": 31
+},
+"401858263": {
+"Miami": 43,
+"Florida State": 35
+},
+"401858264": {
+"Virginia Tech": 34,
+"Georgia Tech": 24
+},
+"401858265": {
+"Syracuse": 26,
+"Louisville": 34
+},
+"401858266": {
+"Duke": 20,
+"North Carolina": 24
+},
+"401858267": {
+"Boston College": 27,
+"Pittsburgh": 21
+},
+"401858268": {
+"SMU": 23,
+"Virginia": 13
+},
+"401871067": {
+"Middle Tennessee": 33,
+"Delaware": 30
+},
+"401871068": {
+"Sam Houston": 3,
+"Western Kentucky": 16
+},
+"401866478": {
+"Miami (OH)": 34,
+"Akron": 14
+},
+"401871091": {
+"UL Monroe": 0,
+"Louisiana Tech": 24
+},
+"401858269": {
+"California": 7,
+"Wake Forest": 41
+},
+"401856833": {
+"Colorado": 24,
+"Utah": 27
+},
+"401860904": {
+"San Diego State": 26,
+"Fresno State": 23
+},
+"401864521": {
+"Hawai'i": 10,
+"New Mexico": 21
+},
+"401858492": {
+"Oregon": 17,
+"Nebraska": 14
+},
+"401866445": {
+"Sacramento State": 7,
+"Ohio": 48
+},
+"401871054": {
+"Missouri State": 24,
+"Kennesaw State": 21
+}
+}

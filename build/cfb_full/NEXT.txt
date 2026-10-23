@@ -1,0 +1,5 @@
+Published v55 = out5 (copy out_pub55). Weeks 1-7 complete (62 FBS-involved games).
+Full rebuild: ./rebuild_w1_7.sh (make_tables first if raw changes); then sync_scores, publish (list files first), build_offline.py.
+Overrides: yard_overrides.json, flag_overrides.json, chart_overrides.py. Known feed gap: 5_401866434 Kent St possession after 7:31 Q2 fumble missing.
+Offline: build_offline.py then add_ppo.py OFFLINE OFFLINE --js-only. PPO step is in rebuild_w1_7.sh and assemble_nfl.py.
+GitHub: python3 -I make_github_pack.py cfb_full/out5 nfl_full/nfl_vNN.html gh_pack/CFB-NFL-Dashboards -> zip the "(3 steps)" folder -> Downloads as "GitHub upload (3 steps)"; user drags Step 1/2/3 into jakesirkus/CFB-NFL-Dashboards (Pages: https://jakesirkus.github.io/CFB-NFL-Dashboards/)

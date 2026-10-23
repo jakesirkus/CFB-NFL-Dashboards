@@ -1,0 +1,16 @@
+{
+ "401858212103935101": {
+  "st_lost": true,
+  "why": "FSU-SMU: Yamir Knight muffed punt recovered by FSU (name-format feed, abbreviation not mappable)"
+ },
+ "401858221164": {
+  "fum_lost": false,
+  "fum_td": false,
+  "why": "ODU-VT: garbled duplicate of the 2:29 sack-fumble TD (same play logged twice)"
+ },
+ "401867909226": {
+  "fum_lost": false,
+  "fum_td": false,
+  "why": "FIU-LIU: scoring-summary line; FIU's Maguire Anderson recovered FIU's own fumble in the end zone for a TD (7-3 -> 14-3)"
+ }
+}

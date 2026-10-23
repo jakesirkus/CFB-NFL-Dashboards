@@ -1,0 +1,4 @@
+Published NFL v31 = nfl_v31.html (Weeks 1-6 complete, PPO added; assemble_nfl now runs add_ppo).
+Update: curl nflverse play_by_play_2026.csv.gz -> read_csv -> to_pickle pbp_newN.pkl
+FULLWEEK=14 python3 -I assemble_nfl.py pbp_newN.pkl live_data.json live_v23.html out.html out.json 1 2 3 4 5 6
+Checks: check_nfl_scores.py out.json pbp.pkl ; check_nfl_charts.py out.json
