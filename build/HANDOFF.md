@@ -51,7 +51,9 @@ Source: the user's CollegeFootballData play-by-play CSV export for the week (`do
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).
-Copy into the repo checkout, commit, push. (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
+Copy into the repo checkout, commit, push.
+**WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
+scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
 ## Conventions / lessons (don't regress these)
 - Reviewed plays: only the final ruling counts (text before "The previous play is under review…").
