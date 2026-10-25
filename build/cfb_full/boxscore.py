@@ -109,6 +109,9 @@ def td_scorer(r, amap):
         return r.Defense
     if kick_return_td(r): return r.Defense
     if 'blocked' in tl and 'return' in tl and 'fumble' not in tl and r.PlayType not in ('Rushing Touchdown','Passing Touchdown'): return r.Defense   # blocked kick returned for a TD
+    if 'blocked' in tl and 'fumble' not in tl and r.PlayType in ('Punt','Field Goal Missed','Blocked Punt','Blocked Field Goal','Punt Return'):
+        m=_REC.search(t)                          # blocked kick recovered in the end zone ('blocked by #5 ... recovered by UC #5 ... TOUCHDOWN')
+        return (amap.get(m.group(1)) if m else None) or r.Defense
     if 'intercepted' in tl and ('return' in tl or 'touchdown' in tl) and r.PlayType not in ('Rushing Touchdown','Passing Touchdown'): return r.Defense
     if 'fumble' in tl and r.PlayType not in ('Rushing Touchdown','Passing Touchdown'):
         m=_REC.search(t)
@@ -122,7 +125,14 @@ def score_events(order, amap):
     ev=[]
     for _,r in order.iterrows():
         pt=r.PlayType; tl=str(r.PlayText).lower()
+        ov=SCORE_OVERRIDES.get(str(int(r.Id))) if 'Id' in r else None
+        if ov is not None:                      # hand-verified scoring for plays the feed gets wrong / leaves out
+            for e in ov['events']: ev.append((r.DriveNumber, e[0], int(e[1])))
+            continue
         is_td = pt in RET_TD or pt in ('Rushing Touchdown','Passing Touchdown') or (r.Scoring==True and ('touchdown' in tl or 'for a td' in tl)) or kick_return_td(r)
+        # 'TOUCHDOWN nullified by penalty' (make_tables rewrites it to SCORE NULLIFIED) is not a score, even when the
+        # feed still types the row as a touchdown
+        if is_td and 'score nullified' in tl and 'touchdown' not in tl: is_td=False
         if is_td and (pt not in ('Field Goal Good','Safety') or 'no good' in tl):
             ev.append((r.DriveNumber, td_scorer(r, amap), 6+pat_points(r.PlayText)))
         elif (pt=='Field Goal Good' or (r.Scoring==True and 'field goal' in tl and 'good' in tl)) and 'no good' not in tl: ev.append((r.DriveNumber, r.Offense, 3))
@@ -133,6 +143,8 @@ def score_events(order, amap):
 import os as _os, json as _json
 _OF=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'official_finals.json')
 OFFICIAL_FINALS=_json.load(open(_OF)) if _os.path.exists(_OF) else {}
+_SO=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'score_overrides.json')
+SCORE_OVERRIDES=_json.load(open(_SO)) if _os.path.exists(_SO) else {}
 _SPOT=_re.compile(r'(?:\bat|to the|from)\s+(?:the\s+)?([A-Za-z&\.\']+?)\s?(\d{1,2})\b')
 def _spot_from_text(txt, team, amap):
     """yards to goal for `team` from a play's 'at NAVY45' / 'to the Tulsa06' (where the play STARTED is the

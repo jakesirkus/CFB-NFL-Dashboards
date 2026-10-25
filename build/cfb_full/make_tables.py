@@ -15,7 +15,19 @@ def final_text(t):
     """The feed writes a reviewed play as '<final ruling>. The previous play is under review ... CALL OVERTURNED.
     (Original Play: <what was first called>)'. Only the leading part is what counted."""
     if not isinstance(t,str): return t
-    return _REVIEW.sub('', t).strip() or t
+    head=_REVIEW.sub('', t).strip() or t
+    # the try after a reviewed TD is written AFTER the '(Original Play: ...)' block
+    # ('... CALL OVERTURNED. (Original Play: ...) #15 W.Hammond pass attempt failed'): keep that tail
+    i=t.find('(Original Play:')
+    if i>=0:
+        depth=0
+        for j in range(i,len(t)):
+            depth+=t[j]=='('; depth-=t[j]==')'
+            if depth==0:
+                tail=t[j+1:].strip()
+                if tail: head=head+' '+tail
+                break
+    return head
 if __name__=='__main__':
     raw=pd.read_pickle(sys.argv[1])
     raw['PlayText']=raw.PlayText.map(final_text)

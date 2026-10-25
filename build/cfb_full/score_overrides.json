@@ -1,0 +1,56 @@
+{
+ "401862808789": {
+  "events": [
+   [
+    "Army",
+    3
+   ]
+  ],
+  "why": "Army-Tulsa wk8: feed ends at Army's 0:01 timeout at the Tulsa 33; the game-winning FG is missing. Official 38-35 Army (CFBD game score)."
+ },
+ "401866449214": {
+  "events": [
+   [
+    "Eastern Michigan",
+    7
+   ]
+  ],
+  "why": "EMU-Ohio wk8: Ohio QB sacked, fumble returned 25 yds for a TD by EMU (EMU's Kessinger kicked the PAT); name-format text has no team. Official 24-20 Ohio."
+ },
+ "401871094798": {
+  "events": [
+   [
+    "UL Monroe",
+    6
+   ]
+  ],
+  "why": "ULM-Troy wk8: final-play lateral fumbled at the Troy goal line, recovered by ULM's B.Pullen for a TD; no try at 0:00. Feed 15->21, official 21-14 ULM."
+ },
+ "401866450487": {
+  "events": [
+   [
+    "Western Michigan",
+    7
+   ]
+  ],
+  "why": "WMU-Toledo wk8: WMU's TD to open the 2nd half (WMU then kicked off at 14:47) is missing from the feed; only its PAT row survives. Feed 14->21, official 45-38 Toledo."
+ },
+ "40187105556": {
+  "events": [
+   [
+    "Florida International",
+    8
+   ]
+  ],
+  "why": "MTSU-FIU wk8: after repeated MTSU penalties on the try FIU converted 2 (feed 6->8); the successful try is not in the text. Official 26-23 MTSU."
+ },
+ "401864509844": {
+  "events": [
+   [
+    "Air Force",
+    6
+   ]
+  ],
+  "why": "Air Force-Nevada wk4 (2OT): walk-off TD by Air Force, no try. Official 36-33 (CFBD game score); feed showed 37."
+ }
+}

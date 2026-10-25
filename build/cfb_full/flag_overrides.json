@@ -12,5 +12,15 @@
   "fum_lost": false,
   "fum_td": false,
   "why": "FIU-LIU: scoring-summary line; FIU's Maguire Anderson recovered FIU's own fumble in the end zone for a TD (7-3 -> 14-3)"
+ },
+ "40185672747": {
+  "int": true,
+  "int_td": true,
+  "why": "TAMU-Alabama wk8: D.Lee Jr. pick-six; the 'NO PLAY' in the text is a false start on the PAT, the interception counts"
+ },
+ "401871094798": {
+  "fum_lost": true,
+  "fum_td": true,
+  "why": "ULM-Troy wk8: final-play lateral fumbled at the Troy goal line, recovered by ULM's B.Pullen for the winning TD"
  }
 }

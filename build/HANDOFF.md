@@ -8,12 +8,12 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State at handoff (Oct 23, 2026): **CFB Weeks 1–7 complete (all FBS-involved games). NFL Weeks 1–6 complete + Week 7 NE @ CHI** (nfl_v32.html, Oct 23).
+State (Oct 25, 2026): **CFB Weeks 1–7 complete + Week 8 (54 of 56 FBS-involved games; NDSU @ New Mexico and Houston @ Utah still to add) — `out6`. NFL Weeks 1–6 complete + Week 7 NE @ CHI** (nfl_v32.html, Oct 23).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
 ```
-cfb_full/   CFB pipeline (Python). out5/ = current published CFB site (index.html + periods/ + drivecharts/ shards)
+cfb_full/   CFB pipeline (Python). out6/ = current published CFB site (out5 = Weeks 1-7) (index.html + periods/ + drivecharts/ shards)
             out4/ = Weeks 1-6 base used by rebuild_w1_7.sh. combined_raw_w1_7.pkl = all CFB play-by-play so far.
 nfl_full/   NFL pipeline. nfl_v32.html = current NFL page. live_v23.html = page template, live_data.json = team list/order.
 nfl_rebuild/cfb_team_list.json  FBS team list
@@ -21,7 +21,9 @@ add_ppo.py, make_github_pack.py, verify_*.js (jsdom page tests; `npm install jsd
 ```
 
 ## CFB weekly update
-Source: the user's CollegeFootballData play-by-play CSV export for the week (`download_NN.csv`).
+Source: the CollegeFootballData API (`/plays?year=2026&week=N`, key from the user — never commit it) converted to the (`cfbd_to_csvfmt.py ref.pkl plays.json out.pkl`)
+28-column CSV-export layout (same data as the website's CSV export; Week 7 cross-checked Oct 25), or the user's CSV export.
+Only add games the API marks `completed`. Week 8 example: `rebuild_w8.sh`.
 1. Append the new week's rows to `combined_raw_w1_7.pkl` (same 28 columns; cast dtypes to match; replace any game
    that was partial in an earlier export). Keep only FBS-involved games on the site.
 2. **Verify every final** before building: tally of scoring plays = max score = last score in the feed
@@ -38,6 +40,12 @@ Source: the user's CollegeFootballData play-by-play CSV export for the week (`do
 8. Data fixes that touch earlier weeks: see `rebuild_w1_7.sh` (patch_turnovers, regen_boxes, improve_week, fix_week_opps,
    polish_charts, chart_overrides.py). Hand-verified fixes live in `flag_overrides.json`, `yard_overrides.json`, `chart_overrides.py`.
 9. Offline file: `build_offline.py out6 offline_template.html OUT.html` then `../add_ppo.py OUT.html OUT.html --js-only`.
+
+**Scoring fixes:** `score_overrides.json` (play Id -> hand-verified scoring events, each with a `why`) for plays the feed gets wrong or
+is missing (missing final FG, missing kickoff-return TD, name-format scoop-and-score…). `fix_published_finals.py OUT wk_gid,...` corrects an
+already-published game's final after adding it to official_finals.json (refuses unless only chart scores change).
+**Oct 25 audit:** every FBS-involved Wk 1-7 game re-pulled from the API: 508/510 site finals = CFBD official; the other two
+(MTSU-Nevada wk3 27-20, Air Force-Nevada wk4 36-33) were corrected. Five Wk 7 games have since gained a few feed plays (no score change).
 
 ## NFL update
 1. Download `https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz`, `read_csv` → `to_pickle pbp_newN.pkl`.

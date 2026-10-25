@@ -109,6 +109,30 @@ def fix(gk, ch):
             l.update({'t1': '1:20', 't2': '1:20'}); a.update({'how': 'DOWNS'})
             get(ch, 5).update({'how': 'PUNT'})
             ch[2], ch[3] = l, a
+    # ---------------- Week 8 (scores come from score_overrides.json; these fix the drive labels) ----------------
+    elif gk == '8_401856727':    # Texas A&M - Alabama: TAMU's 1st drive ended in D.Lee's pick-six (PAT text has a false start)
+        x = get(ch, 2)
+        if x['team'] == 'Texas A&M' and x['result'] == 'Touchdown' and x['oppScore'] == 7: x['result'] = 'Interception (Pick-6)'
+    elif gk == '8_401861965':    # UMass - UConn: UMass punt blocked by S.Porter, recovered by UConn in the end zone (21-3 -> 28-3)
+        x = get(ch, 18)
+        if x['team'] == 'Massachusetts' and x['result'] == 'Punt' and x['oppScore'] == 28:
+            x.update({'result': 'Blocked Punt (TD)', 'color': 'blue', 'scored': True})
+    elif gk == '8_401871094':    # ULM - Troy: Troy's last play, a multi-lateral, fumbled at the goal line and recovered by ULM for the winning TD
+        x = get(ch, 27)
+        if x['team'] == 'Troy' and x['result'] == 'Touchdown':
+            x['playList'].sort(key=lambda p: -(clk(p) or 0))
+            x.update({'result': 'Fumble (Defensive TD)', 't2': '0:00', 'playText': x['playList'][-1]['text']})
+    elif gk == '8_401866450':    # WMU - Toledo: J.Franklin's 92-yd return of the 2nd-half kickoff is missing from the feed
+        a, t = get(ch, 16), get(ch, 17)   # (WMU recap; only the PAT row survives). Toledo kicked off; WMU then kicked off at 14:47.
+        if a['result'] == 'End of Half' and t['team'] == 'Toledo' and t['result'] != 'Kickoff (Return TD)' and t['oppScore'] == 21 and a['teamScore'] == 14:
+            txt = ('Kickoff returned 92 yards for a TOUCHDOWN by J.Franklin (WMU) - play missing from the data feed, '
+                   'per WMU recap. #32 D.Kelly kick attempt good (H: #25 R.Millmore, LS: #46 D.Doyle)')
+            kr = {'team': 'Toledo', 'opponent': 'Western Michigan', 'q1': 3, 't1': '15:00', 'spot1': 35.0, 'q2': 3, 't2': '14:47',
+                  'spot2': 35, 'plays': 1, 'yards': 0, 'top': '0:13', 'result': 'Kickoff (Return TD)', 'color': 'blue',
+                  'clickable': True, 'opp30': False, 'playText': txt, 'teamScore': 31, 'oppScore': 21, 'scored': True, 'how': 'KO',
+                  'playList': [{'q': 3, 'text': txt, 'scoring': True, 'penalty': False, 'down': None, 'distance': None,
+                                'goalToGo': False, 'yardline100': None}]}
+            ch.insert(ch.index(a) + 1, kr)
     return renum(ch)
 
 if __name__ == '__main__':
