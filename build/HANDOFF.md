@@ -8,14 +8,14 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Oct 25, 2026): **CFB Weeks 1–7 complete + Week 8 (54 of 56 FBS-involved games; NDSU @ New Mexico and Houston @ Utah still to add) — `out6`. NFL Weeks 1–6 complete + Week 7 NE @ CHI** (nfl_v32.html, Oct 23).
+State (Oct 25, 2026): **CFB Weeks 1–8 complete (all 56 Week 8 FBS-involved games) — `out6`. NFL Weeks 1–6 complete + Week 7 NE @ CHI** (nfl_v33.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
 ```
-cfb_full/   CFB pipeline (Python). out6/ = current published CFB site (out5 = Weeks 1-7) (index.html + periods/ + drivecharts/ shards)
+cfb_full/   CFB pipeline (Python). out6/ = current published CFB site (out5b = Weeks 1-7 base with regenerated Wk1-6 boxes + xPts; out5 = older Weeks 1-7) (index.html + periods/ + drivecharts/ shards)
             out4/ = Weeks 1-6 base used by rebuild_w1_7.sh. combined_raw_w1_7.pkl = all CFB play-by-play so far.
-nfl_full/   NFL pipeline. nfl_v32.html = current NFL page. live_v23.html = page template, live_data.json = team list/order.
+nfl_full/   NFL pipeline. nfl_v33.html = current NFL page. live_v24.html = page template (has the expected-score display), live_data.json = team list/order.
 nfl_rebuild/cfb_team_list.json  FBS team list
 add_ppo.py, make_github_pack.py, verify_*.js (jsdom page tests; `npm install jsdom` first)
 ```
@@ -55,10 +55,15 @@ already-published game's final after adding it to official_finals.json (refuses 
 3. Checks: `check_nfl_scores.py nfl_vNN.json pbp_newN.pkl` (0 problems), `check_nfl_charts.py nfl_vNN.json` (no issues),
    `node ../verify_nfl5.js nfl_vNN.html`, and confirm earlier weeks' drive charts are unchanged vs the previous build.
 
+## Box-score expected score (xPts / deserved win %)
+Model: `xpts_model.json` (fixed coefficients fitted Oct 25 on Weeks 1-7; formula in its `_doc`). `add_xpts.py cfb|nfl IN OUT`
+fills games that have none (plus `--recompute gk,...` for games whose box was regenerated). NFL: assemble_nfl.py runs it with
+`--all`; set `PREV=<previous nfl_vNN.html>` so unchanged games keep their values. CFB: last step of `rebuild_wN.sh`.
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).
-Copy into the repo checkout, commit, push.
+Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nfl.html` at the repo root are just redirects to the folders — never upload page copies there.)
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 

@@ -1,0 +1,32 @@
+{
+ "cfb": {
+  "coef": {
+   "intercept": -6.833,
+   "drives": -0.515,
+   "drivesXavail": 4.325,
+   "drivesXexpl": 2.687,
+   "drivesXsuccess": 3.086,
+   "expGiveaways": -2.314
+  },
+  "winSlope": 0.18,
+  "teamGames": 1438,
+  "cvMAE": 5.66,
+  "cvR2": 0.783,
+  "boxWinnerWonPct": 85.5
+ },
+ "nfl": {
+  "coef": {
+   "intercept": -6.967,
+   "drives": 0.087,
+   "drivesXavail": 4.734,
+   "drivesXsuccess": 1.842,
+   "expGiveaways": -1.971
+  },
+  "winSlope": 0.205,
+  "teamGames": 188,
+  "cvMAE": 4.7,
+  "cvR2": 0.616,
+  "boxWinnerWonPct": 77.4
+ },
+ "_doc": "Box-score expected score (fitted Oct 25, 2026 on Weeks 1-7; coefficients are FIXED - applied as-is to new games). xPts = max(0, intercept + drives*b_drives + drives*availYardsPct/100*b_drivesXavail + drives*successRate/100*b_drivesXsuccess + drives*explosiveRate/100*b_drivesXexpl (CFB only) + (ints + 0.5*fumbleEvents)*b_expGiveaways), rounded to 0.1. Inputs from each team's box score: drives.total, drives.availYardsPct (missing -> 0), overall.successRate, overall.explosiveRate, turnovers.ints, turnovers.fumbleEvents (all fumbles, lost or not). xWin = round(100/(1+exp(-winSlope*(xPts - opp xPts)))) using the rounded xPts."
+}
