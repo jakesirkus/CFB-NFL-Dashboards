@@ -82,8 +82,13 @@ def fix(gk, ch):
                         'playText': d15['playList'][-1]['text']})
             t16['playList'] = sorted(t16['playList'] + mv, key=lambda p: -(clk(p) or 0))
             t16.update({'how': 'DOWNS', 't1': '4:57', 'spot1': 18.0, 'plays': t16['plays'] + 1, 'yards': t16['yards'] + 6})
-    elif gk == '1_401858212':    # FSU - SMU: SMU's fumbled punt return is now its own entry (box and chart agree)
-        pass
+    elif gk == '1_401858212':    # FSU - SMU: SMU's fumbled punt return is now its own entry (box and chart agree);
+        for n in (1, 24):        # + lost fumbles the feed typed as plain runs (flag_overrides.json, Oct 25)
+            x = get(ch, n)
+            if x['result'] in ('End of Quarter', 'End of Game'):
+                x.update({'result': 'Fumble', 'color': 'red'})
+                nx = next((y for y in ch if y['n'] == n + 1), None)
+                if nx is not None and nx['team'] != x['team']: nx['how'] = 'FUMB'
     elif gk == '2_401866414':    # Buffalo - FIU: feed clocks wrong after FIU's 3:37 TD
         b5, f6, b7 = get(ch, 5), get(ch, 6), get(ch, 7)
         if f6['result'] == 'End of Quarter':
@@ -109,6 +114,14 @@ def fix(gk, ch):
             l.update({'t1': '1:20', 't2': '1:20'}); a.update({'how': 'DOWNS'})
             get(ch, 5).update({'how': 'PUNT'})
             ch[2], ch[3] = l, a
+    # ---- lost fumbles the feed typed as own recoveries (flag_overrides.json, Oct 25): drive ends in a Fumble ----
+    elif gk in ('1_401856667', '2_401856787'):
+        for n in {'1_401856667': (12,), '2_401856787': (3,)}[gk]:
+            x = get(ch, n)
+            if x['result'] in ('End of Quarter', 'End of Game'):
+                x.update({'result': 'Fumble', 'color': 'red'})
+                nx = next((y for y in ch if y['n'] == n + 1), None)
+                if nx is not None and nx['team'] != x['team']: nx['how'] = 'FUMB'
     # ---------------- Week 8 (scores come from score_overrides.json; these fix the drive labels) ----------------
     elif gk == '8_401856727':    # Texas A&M - Alabama: TAMU's 1st drive ended in D.Lee's pick-six (PAT text has a false start)
         x = get(ch, 2)

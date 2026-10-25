@@ -26,7 +26,10 @@ def gamelog(gid, t):
     orr = off[off.is_rush]; opa = off[off.is_pass]
     return {'plays': len(os_), 'ypp': round(os_.YardsGained.sum() / len(os_), 2) if len(os_) else 0,
             'exp': int(off.is_expl.sum()), 'expAllowed': int(de.is_expl.sum()),
-            'rushYds': int(orr.YardsGained.sum()), 'passYds': int(opa.YardsGained.sum())}
+            'rushYds': int(orr.YardsGained.sum()), 'passYds': int(opa.YardsGained.sum()),
+            # game-log 'to' = giveaways - takeaways, exactly as build_week computes it (so a turnover fix reaches the game log)
+            'to': (int(gp[gp.Offense == t].giveaway.sum()) + int(gp[(gp.Defense == t) & gp.st_lost].shape[0]))
+                  - (int(gp[gp.Defense == t].giveaway.sum()) + int(gp[(gp.Offense == t) & gp.st_lost].shape[0]))}
 if __name__ == '__main__':
     T = '<script id="dashboard-data" type="application/json">'
     s = open(OUT + '/index.html').read(); a = s.index(T) + len(T); b = s.index('</script>', a); D = json.loads(s[a:b])

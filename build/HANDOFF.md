@@ -36,6 +36,7 @@ Only add games the API marks `completed`. Week 8 example: `rebuild_w8.sh`.
 6. `sync_scores.py out6/index.html out6/index.html`, `python3 -I ../add_ppo.py out6/index.html out6/index.html`
 7. Checks — must be clean before publishing: `check_week.py out6 WEEK` (and earlier weeks), `scan_chart_scores.py out6`,
    `node ../verify_w6.js out6/index.html`, `node ../verify_ppo.js out6/index.html "Ohio State"`.
+   Also `check_fumble_text.py wN_gids.txt` (feed sometimes types a LOST fumble as 'Fumble Recovery (Own)': fix hits in flag_overrides.json).
    Known/accepted flags: 5_401866434 Kent State–Ohio (feed is missing a Kent possession) and ~21 FCS-vs-FCS feed gaps.
 8. Data fixes that touch earlier weeks: see `rebuild_w1_7.sh` (patch_turnovers, regen_boxes, improve_week, fix_week_opps,
    polish_charts, chart_overrides.py). Hand-verified fixes live in `flag_overrides.json`, `yard_overrides.json`, `chart_overrides.py`.

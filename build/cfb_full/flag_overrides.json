@@ -22,5 +22,25 @@
   "fum_lost": true,
   "fum_td": true,
   "why": "ULM-Troy wk8: final-play lateral fumbled at the Troy goal line, recovered by ULM's B.Pullen for the winning TD"
+ },
+ "401856729503": {
+  "fum_lost": true,
+  "why": "Vandy-Kentucky wk8: Curtis sack-fumble 'recovered by UK #94 T.Gadson at VANDY17' (feed typed it Fumble Recovery (Own)); Kentucky took over and kicked a FG"
+ },
+ "401856667466": {
+  "fum_lost": true,
+  "why": "Texas State-Texas wk1: B.Jackson sack-fumble 'recovered by TEXAS #1 C.Simmons at TXST42' (typed Own); Texas snapped next"
+ },
+ "40185678780": {
+  "fum_lost": true,
+  "why": "Southern-Houston wk2: C.Johnson sack-fumble 'recovered by HOU #47 D.Mays at SU22' (typed Own); Houston scored a TD two plays later"
+ },
+ "401858212101877501": {
+  "fum_lost": true,
+  "why": "SMU-FSU wk1: SMU's first drive, Jalen Hale fumble 'recovered by FSU' (name-format line typed Rush); FSU snapped next"
+ },
+ "401858212104999901": {
+  "fum_lost": true,
+  "why": "FSU-SMU wk1: final play, Duce Robinson fumble 'recovered by SMU' (name-format line typed Rush)"
  }
 }
