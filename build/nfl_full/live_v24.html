@@ -826,7 +826,7 @@
 
   function buildOverallSection(a, b, heads){
     var OVR = [
-      ['epaPlay','EPA/Play', 'off'], ['successRate','Success Rate','off'], ['ypp','Yards/Play*','off'],
+      ['epaPlay','EPA/Play', 'off'], ['successRate','Success Rate','off'], ['earlySuccessRate','Early Down Success Rate','off'], ['ypp','Yards/Play*','off'],
       ['passEpaPlay','EPA/Pass (no scrambles)','off'], ['dbEpaPlay','EPA/Dropback (incl. scrambles)','off'], ['rushEpaPlay','EPA/Rush','off'], ['passYpp','Yards/Dropback','off'],
       ['explosiveRate','Explosive Play Rate','off'], ['thirdRate','3rd Down Conversion Rate','off'],
       ['seriesRate','Series Conversion Rate','off'], ['seriesRateAllowed','Series Conv. Rate Allowed','def'],
@@ -896,6 +896,7 @@
       + '<tr><td colspan="3" class="bs-subhead">Early Downs (1st &amp; 2nd)</td></tr>'
       + bsRow('First Downs Created', bi(s1.earlyDownFirstDowns), bi(s2.earlyDownFirstDowns), true)
       + bsRow('EPA/Play', bn(s1.earlyEpaPlay,3), bn(s2.earlyEpaPlay,3), true)
+      + bsRow('Success Rate', bp(s1.earlySuccessRate), bp(s2.earlySuccessRate), true)
       + bsRow('Passes / Rushes', bi(s1.earlyPass)+' / '+bi(s1.earlyRush), bi(s2.earlyPass)+' / '+bi(s2.earlyRush), true)
       + bsRow('Successful Pass / Rush Rate', bp(s1.earlyPassSuccessRate)+' / '+bp(s1.earlyRushSuccessRate), bp(s2.earlyPassSuccessRate)+' / '+bp(s2.earlyRushSuccessRate), true)
       + '<tr><td colspan="3" class="bs-subhead">Late Downs (3rd &amp; 4th)</td></tr>'

@@ -61,6 +61,12 @@ Model: `xpts_model.json` (fixed coefficients fitted Oct 25 on Weeks 1-7; formula
 fills games that have none (plus `--recompute gk,...` for games whose box was regenerated). NFL: assemble_nfl.py runs it with
 `--all`; set `PREV=<previous nfl_vNN.html>` so unchanged games keep their values. CFB: last step of `rebuild_wN.sh`.
 
+## Early-down success rate (Oct 26)
+Box score: Overall 'Early Down Success Rate' (under Success Rate, with percentile) + 'Success Rate' in the Early Downs section,
+for the full game and every quarter/half split. `add_early_sr.py` derives it from the stored early pass/rush counts and rates
+(exact); `patch_early_sr_ui.py` adds the rows to a page template. Both run inside rebuild_wN.sh (CFB) and assemble_nfl.py (NFL).
+Render check: `node verify_box_esr.js PAGE.html "Team"`.
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).
