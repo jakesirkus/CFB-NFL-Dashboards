@@ -8,14 +8,14 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Oct 25, 2026): **CFB Weeks 1–8 complete (all 56 Week 8 FBS-involved games) — `out6`. NFL Weeks 1–6 complete + 12 of 14 Week 7 games** (nfl_v34.html; KC @ SEA and DAL @ PHI to add).
+State (Oct 25, 2026): **CFB Weeks 1–8 complete (all 56 Week 8 FBS-involved games) — `out6`. NFL Weeks 1–6 complete + 13 of 14 Week 7 games** (nfl_v35.html; DAL @ PHI to add).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
 ```
 cfb_full/   CFB pipeline (Python). out6/ = current published CFB site (out5b = Weeks 1-7 base with regenerated Wk1-6 boxes + xPts; out5 = older Weeks 1-7) (index.html + periods/ + drivecharts/ shards)
             out4/ = Weeks 1-6 base used by rebuild_w1_7.sh. combined_raw_w1_7.pkl = all CFB play-by-play so far.
-nfl_full/   NFL pipeline. nfl_v34.html = current NFL page. live_v24.html = page template (has the expected-score display), live_data.json = team list/order.
+nfl_full/   NFL pipeline. nfl_v35.html = current NFL page. live_v24.html = page template (has the expected-score display), live_data.json = team list/order.
 nfl_rebuild/cfb_team_list.json  FBS team list
 add_ppo.py, make_github_pack.py, verify_*.js (jsdom page tests; `npm install jsdom` first)
 ```

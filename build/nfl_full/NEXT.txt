@@ -1,5 +1,5 @@
-Published NFL v34 = nfl_v34.html (Weeks 1-6 + 12 of 14 Week 7 games; KC@SEA and DAL@PHI to add; Oct 25, 2026). Template = live_v24.html.
+Published NFL v35 = nfl_v35.html (Weeks 1-6 + 13 of 14 Week 7 games; DAL@PHI to add; Oct 26, 2026). Template = live_v24.html.
 Update: curl nflverse play_by_play_2026.csv.gz -> read_csv -> to_pickle pbp_newN.pkl
-PREV=nfl_v34.html FULLWEEK=14 python3 -I assemble_nfl.py pbp_newN.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7
+PREV=nfl_v35.html FULLWEEK=14 python3 -I assemble_nfl.py pbp_newN.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7
 Checks: check_nfl_scores.py out.json pbp.pkl ; check_nfl_charts.py out.json ; node ../verify_nfl5.js out.html
-Compare earlier weeks' drive charts vs nfl_v34.html (extract the dashboard-data block).
+Compare earlier weeks' drive charts vs nfl_v35.html (extract the dashboard-data block).
