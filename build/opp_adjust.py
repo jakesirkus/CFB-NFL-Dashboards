@@ -149,15 +149,21 @@ for side, rk in (('off', 'offRaw'), ('def', 'defRaw')):
             TA[t]['radar'][side][m] = round(float(100 * ((sgn * arr) <= sgn * v + 1e-12).sum() / len(arr)), 1)
 # ---------- composite opponent-adjusted offense / defense ranks ----------
 COMP = {'epaPlay': 0.30, 'earlyEpa': 0.15, 'successRate': 0.15, 'epaPerDrive': 0.20, 'ppo': 0.10, 'explosivePct': 0.10}
-for side, sgn in (('off', 1), ('def', -1)):            # defense: allowing less is better
-    score = {t: 0.0 for t in TEAMS}
-    for m, wt in COMP.items():
-        vals = np.array([ADJ.get((t, side, m), np.nan) for t in TEAMS], float)
-        mu_, sd_ = np.nanmean(vals), np.nanstd(vals)
-        for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) else sgn * (v - mu_) / sd_)
-    order = sorted(TEAMS, key=lambda t: -score[t])
-    for i, t in enumerate(order):
-        TA[t].setdefault('adjRank', {})[side] = i + 1; TA[t]['adjRank'][side + 'Score'] = round(score[t], 3)
+RUSH = {'rushEpa': 0.35, 'rushSR': 0.20, 'opportunityPct': 0.15, 'rushExplPct': 0.10, 'lineYards': 0.10, 'stuffPct': 0.10}
+PASS = {('dbEpa' if LG == 'nfl' else 'passEpa'): 0.35, 'passSR': 0.20, 'earlyPassSR': 0.15, 'passExplPct': 0.15, 'ydsPerDb': 0.15}
+LOW_BETTER_FOR_OFFENSE = {'stuffPct'}                   # being stuffed is bad for an offense, good for a defense
+CATS = (('', COMP), ('rush', RUSH), ('pass', PASS))     # adjRank keys: off/def, rushOff/rushDef, passOff/passDef
+for cat, comp in CATS:
+    for side, base in (('off', 1), ('def', -1)):        # defense: allowing less is better
+        key = side if not cat else cat + side.capitalize()
+        score = {t: 0.0 for t in TEAMS}
+        for m, wt in comp.items():
+            sgn = -base if m in LOW_BETTER_FOR_OFFENSE else base
+            vals = np.array([ADJ.get((t, side, m), np.nan) for t in TEAMS], float)
+            mu_, sd_ = np.nanmean(vals), np.nanstd(vals)
+            for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) or not sd_ else sgn * (v - mu_) / sd_)
+        for i, t in enumerate(sorted(TEAMS, key=lambda t: -score[t])):
+            TA[t].setdefault('adjRank', {})[key] = i + 1; TA[t]['adjRank'][key + 'Score'] = round(score[t], 3)
 # ---------- strength of schedule: average blended opponent rating (games used by the adjustment), rank 1 = hardest ----------
 SOS = {}
 for t in TEAMS:
@@ -168,7 +174,7 @@ D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
                        'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
-                       'composite': COMP}
+                       'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS}
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a0] + js + s[b0:])
 print(f'{LG}: opponent adjustment written (blend {BLEND}, {len(METRICS)} stats, {len(delta)} team-side deltas)')

@@ -76,6 +76,8 @@ CFB uses FBS-vs-FBS games only. `opp_adjust.py LG IN OUT --blend 0.25` adds DATA
 Both run in rebuild_wN.sh / assemble_nfl.py; with no ratings file the step is skipped and the toggle hidden.
 Composite adjusted Offense/Defense rank (team header chip, adjusted mode only): z-scored adjusted EPA/play 30%, early-down EPA/play 15%,
 success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10% (COMP in opp_adjust.py).
+Second header chip: Rush O/Pass O/Rush D/Pass D ranks (RUSH: EPA/rush 35%, rush SR 20%, opportunity rate 15%, explosive runs 10%,
+line yards 10%, stuff rate 10%; PASS: EPA/dropback 35%, pass SR 20%, early-down pass SR 15%, explosive passes 15%, yds/dropback 15%; RUSH/PASS in opp_adjust.py).
 Header chip also shows Schedule #N = average blended opponent rating (games used by the adjustment), 1 = hardest.
 Weekly: when the user sends updated workbooks, re-run read_ratings.py before the build. Test: `node verify_adj.js PAGE "Team"`.
 

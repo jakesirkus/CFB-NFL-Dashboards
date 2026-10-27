@@ -373,6 +373,7 @@
         <span class="chip record" id="teamRecord">—</span>
         <span class="chip" id="teamGp">—</span>
         <span class="chip" id="adjRankChip" hidden></span>
+        <span class="chip" id="adjUnitChip" hidden></span>
       </div>
     </div>
     <div class="banner-meta">
@@ -1194,6 +1195,11 @@
         arc.textContent = 'Adj. Offense #'+t.adjRank.off+' · Adj. Defense #'+t.adjRank.def+(t.sos?' · Schedule #'+t.sos.rank:'')+' (of '+total+')';
         arc.title = 'Opponent-adjusted composite: EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%'+(t.sos?'. Schedule #'+t.sos.rank+' = average opponent power rating '+t.sos.avgOppRating.toFixed(1)+' (1 = hardest)':'');
       } else { arc.hidden = true; } }
+    var auc = document.getElementById('adjUnitChip');
+    if(auc){ if(t.adjRank && t.adjRank.rushOff){ auc.hidden = false;
+        auc.textContent = 'Rush O #'+t.adjRank.rushOff+' · Pass O #'+t.adjRank.passOff+' · Rush D #'+t.adjRank.rushDef+' · Pass D #'+t.adjRank.passDef;
+        auc.title = 'Opponent-adjusted. Rush: EPA/rush 35%, rush success rate 20%, opportunity rate 15%, explosive run rate 10%, line yards 10%, stuff rate 10%. Pass: EPA/dropback 35%, pass success rate 20%, early-down pass success rate 15%, explosive pass rate 15%, yards/dropback 15%';
+      } else { auc.hidden = true; } }
     document.getElementById('mYpp').textContent = num(t.ypp,1);
     document.getElementById('mYppAllowed').textContent = num(t.yppAllowed,1);
     document.getElementById('mExp').textContent = pct(t.explosiveRate);
