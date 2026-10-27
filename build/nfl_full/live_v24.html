@@ -372,6 +372,7 @@
         <span class="chip" id="teamConf">—</span>
         <span class="chip record" id="teamRecord">—</span>
         <span class="chip" id="teamGp">—</span>
+        <span class="chip" id="adjRankChip" hidden></span>
       </div>
     </div>
     <div class="banner-meta">
@@ -1188,6 +1189,11 @@
     document.getElementById('teamConf').textContent = t.confLabel;
     document.getElementById('teamRecord').textContent = t.wins+'-'+t.losses;
     document.getElementById('teamGp').textContent = t.gp + (t.gp===1?' game':' games');
+    var arc = document.getElementById('adjRankChip');
+    if(arc){ if(t.adjRank){ arc.hidden = false;
+        arc.textContent = 'Adj. Offense #'+t.adjRank.off+' · Adj. Defense #'+t.adjRank.def+' (of '+total+')';
+        arc.title = 'Opponent-adjusted composite: EPA/play 35%, success rate 20%, EPA/drive 20%, points per opportunity 15%, explosive rate 10%';
+      } else { arc.hidden = true; } }
     document.getElementById('mYpp').textContent = num(t.ypp,1);
     document.getElementById('mYppAllowed').textContent = num(t.yppAllowed,1);
     document.getElementById('mExp').textContent = pct(t.explosiveRate);

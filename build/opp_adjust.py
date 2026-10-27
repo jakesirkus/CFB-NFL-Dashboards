@@ -96,7 +96,12 @@ if '--cv' in args:
 CVR = json.load(open(os.path.join(HERE, f'ratings/{LG}_cv.json')))
 if BLEND is None:
     BLEND = min((0, 0.25, 0.5, 0.75, 1.0), key=lambda b: np.mean([CVR[f'ratings, blend {b}'][m][0] for m in METRICS]))
-LAM = {m: CVR[f'ratings, blend {BLEND}'][m][1] for m in METRICS}
+_key = f'ratings, blend {BLEND}'
+for m in METRICS:                     # a stat added after the last --cv run: cross-validate just that one now
+    if m not in CVR.get(_key, {}):
+        CVR.setdefault(_key, {})[m] = list(cv(m, BLEND, True)); json.dump(CVR, open(os.path.join(HERE, f'ratings/{LG}_cv.json'), 'w'))
+LAM = {m: CVR[_key][m][1] for m in METRICS}
+ADJ = {}                              # (team, side, stat) -> opponent-adjusted FBS-games value at box level (for the composite ranks)
 delta = {}; betas = {}
 for m in METRICS:
     beta = fit(FBS_ROWS[m], BLEND, LAM[m]); betas[m] = (round(float(beta[1]), 5), round(float(beta[2]), 5))
@@ -110,7 +115,7 @@ for m in METRICS:
             if not allr or not fb: continue
             raw_all = np.average([r[5] for r in allr], weights=[r[6] for r in allr])
             adj_fbs = np.average([r[5] - (eff(r) - c) for r in fb], weights=[r[6] for r in fb])
-            delta[(t, side, m)] = adj_fbs - raw_all
+            delta[(t, side, m)] = adj_fbs - raw_all; ADJ[(t, side, m)] = adj_fbs
 
 TA = copy.deepcopy(D['teams'])
 def put(t, side, m, cur):
@@ -142,10 +147,22 @@ for side, rk in (('off', 'offRaw'), ('def', 'defRaw')):
         for t in TEAMS:
             v = TA[t]['radar'][rk][m]
             TA[t]['radar'][side][m] = round(float(100 * ((sgn * arr) <= sgn * v + 1e-12).sum() / len(arr)), 1)
+# ---------- composite opponent-adjusted offense / defense ranks ----------
+COMP = {'epaPlay': 0.35, 'successRate': 0.20, 'epaPerDrive': 0.20, 'ppo': 0.15, 'explosivePct': 0.10}
+for side, sgn in (('off', 1), ('def', -1)):            # defense: allowing less is better
+    score = {t: 0.0 for t in TEAMS}
+    for m, wt in COMP.items():
+        vals = np.array([ADJ.get((t, side, m), np.nan) for t in TEAMS], float)
+        mu_, sd_ = np.nanmean(vals), np.nanstd(vals)
+        for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) else sgn * (v - mu_) / sd_)
+    order = sorted(TEAMS, key=lambda t: -score[t])
+    for i, t in enumerate(order):
+        TA[t].setdefault('adjRank', {})[side] = i + 1; TA[t]['adjRank'][side + 'Score'] = round(score[t], 3)
 D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
-                       'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas}
+                       'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
+                       'composite': COMP}
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a0] + js + s[b0:])
 print(f'{LG}: opponent adjustment written (blend {BLEND}, {len(METRICS)} stats, {len(delta)} team-side deltas)')

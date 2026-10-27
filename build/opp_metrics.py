@@ -33,6 +33,7 @@ M = {
  'ydsPerDb':       lambda b: (V(b['overall']['passYpp']),             drop(b)),
  'passSR':         lambda b: (V(b['situational']['successPassRate']), drop(b)),
  'rushSR':         lambda b: (V(b['situational']['successRushRate']), _n(b['rushing']['rushAtt'])),
+ 'successRate':    lambda b: (V(b['overall']['successRate']),          _n(b['production']['scrimPlays'])),
  # ---- extra season-table stats (not on the radar) ----
  'ypp':            lambda b: (V(b['overall']['ypp']),                 _n(b['production']['scrimPlays']) - _n(b['production']['yppExcludedPlays'])),
  'ypr':            lambda b: (V(b['production']['rushYpp']),          _n(b['rushing']['rushAtt'])),
