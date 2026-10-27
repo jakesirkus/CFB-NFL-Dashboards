@@ -170,6 +170,16 @@ for t in TEAMS:
     rs = [rating(r[3], r[1], BLEND) + CUR_MEAN for r in FBS_ROWS['epaPlay'] if r[2] == t]
     if rs: SOS[t] = float(np.mean(rs))
 for i, t in enumerate(sorted(SOS, key=lambda u: -SOS[u])): TA[t]['sos'] = {'avgOppRating': round(SOS[t], 2), 'rank': i + 1}
+# ---------- unit strength of schedule: how good were the opponents' offenses / defenses / rush & pass units ----------
+# opponent quality = that opponent's composite score (same as the Rankings tab); averaged over the games the adjustment uses
+UNIT_CATS = {'oppOff': 'off', 'oppDef': 'def', 'oppRushOff': 'rushOff', 'oppPassOff': 'passOff', 'oppRushDef': 'rushDef', 'oppPassDef': 'passDef'}
+OPPS = {}
+for r in FBS_ROWS['epaPlay']: OPPS.setdefault(r[2], {})[r[0]] = r[3]          # team -> {game: opponent}
+for cat, key in UNIT_CATS.items():
+    avg = {t: (float(np.mean([TA[o]['adjRank'][key + 'Score'] for o in g.values()])), float(np.mean([TA[o]['adjRank'][key] for o in g.values()])))
+           for t, g in OPPS.items()}
+    for i, t in enumerate(sorted(avg, key=lambda u: -avg[u][0])):           # higher opponent score = tougher
+        TA[t].setdefault('sosUnits', {'games': len(OPPS[t])})[cat] = {'rank': i + 1, 'avgOppRank': round(avg[t][1], 1)}
 D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
