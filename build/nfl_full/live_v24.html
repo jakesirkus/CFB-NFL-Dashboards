@@ -342,11 +342,13 @@
       <div class="eyebrow">NFL · Weeks 1–2</div>
       <h1>Team Dashboard</h1>
       <div class="scope-note" id="scopeNote">Season-to-date offense &amp; defense for all 32 NFL teams, built from Week 1–2 play-by-play.</div>
+      <div class="scope-note" id="adjNote" hidden></div>
     </div>
     <div class="tabs" role="tablist">
       <button class="tab-btn active" id="tabBtnTeam" data-target="team" role="tab" aria-selected="true">Team</button>
       <button class="tab-btn" id="tabBtnLeaderboard" data-target="leaderboard" role="tab" aria-selected="false">Leaderboard</button>
     </div>
+    <div class="tabs adj-toggle" role="group" aria-label="Season numbers" id="adjToggle"><button class="tab-btn active" id="modeRaw" type="button">Raw</button><button class="tab-btn" id="modeAdj" type="button" title="Season numbers adjusted for opponent strength">Opponent-adjusted</button></div>
   </div>
 
   <div data-view="team" class="active">
@@ -1430,6 +1432,25 @@
     var v = teamInput.value;
     if(teams[v]) renderTeam(v);
   });
+
+  // ---------- Raw / Opponent-adjusted toggle ----------
+  var adjMode = false;
+  function setMode(adj){
+    adjMode = !!adj && !!DATA.teamsAdj;
+    teams = adjMode ? DATA.teamsAdj : DATA.teams;
+    document.getElementById('modeRaw').classList.toggle('active', !adjMode);
+    document.getElementById('modeAdj').classList.toggle('active', adjMode);
+    var note = document.getElementById('adjNote');
+    note.hidden = !adjMode;
+    if(adjMode){ var o = (DATA.meta && DATA.meta.oppAdj) || {};
+      note.textContent = 'Opponent-adjusted: ' + (o.note || '') + ' Ratings through Week ' + (o.ratingsThroughWeek || '?') +
+        '. Rates, ranks and the radar are adjusted; counting stats (yards, TDs, sacks, turnovers), game logs and box scores stay raw.'; }
+    var v = teamInput.value; if(teams[v]) renderTeam(v);
+    if(views.leaderboard.classList.contains('active')) renderLeaderboard();
+  }
+  if(!DATA.teamsAdj){ document.getElementById('adjToggle').style.display = 'none'; }
+  document.getElementById('modeRaw').addEventListener('click', function(){ setMode(false); });
+  document.getElementById('modeAdj').addEventListener('click', function(){ setMode(true); });
 
   confFilter.value = 'all';
   populateTeamOptions();

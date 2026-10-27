@@ -15,7 +15,12 @@ LG, SRC, DST = sys.argv[1:4]; args = sys.argv[4:]
 BLEND = float(args[args.index('--blend') + 1]) if '--blend' in args else None
 TAG = '<script id="dashboard-data" type="application/json">'
 s = open(SRC).read(); a0 = s.index(TAG) + len(TAG); b0 = s.index('</script>', a0); D = json.loads(s[a0:b0])
-RT = json.load(open(os.path.join(HERE, f'ratings/{LG}.json')))
+_RF = os.path.join(HERE, f'ratings/{LG}.json')
+if not os.path.exists(_RF):          # ratings are private and not in the repo: after a workspace reset, ask for the workbooks
+    D.pop('teamsAdj', None); D['meta'].pop('oppAdj', None)
+    open(DST, 'w').write(s[:a0] + json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/') + s[b0:])
+    print(f'WARNING {LG}: no power ratings ({_RF}) - opponent adjustment SKIPPED, toggle hidden. Upload the model workbook and run read_ratings.py.'); sys.exit(0)
+RT = json.load(open(_RF))
 RATE = RT['teams']; TEAMS = sorted(D['teams']); IDX = {t: i for i, t in enumerate(TEAMS)}; N = len(TEAMS)
 CUR_MEAN = np.mean([RATE[t]['current'] for t in TEAMS])
 
