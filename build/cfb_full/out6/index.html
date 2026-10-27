@@ -331,6 +331,7 @@
     <div class="tabs" role="tablist">
       <button class="tab-btn active" id="tabBtnTeam" data-target="team" role="tab" aria-selected="true">Team</button>
       <button class="tab-btn" id="tabBtnLeaderboard" data-target="leaderboard" role="tab" aria-selected="false">Leaderboard</button>
+      <button class="tab-btn" id="tabBtnRankings" data-target="rankings" role="tab" aria-selected="false">Rankings</button>
     </div>
     <div class="tabs adj-toggle" role="group" aria-label="Season numbers" id="adjToggle"><button class="tab-btn active" id="modeRaw" type="button">Raw</button><button class="tab-btn" id="modeAdj" type="button" title="Season numbers adjusted for opponent strength">Opponent-adjusted</button></div>
   </div>
@@ -471,6 +472,26 @@
     <div class="game-cards" id="gameCards"></div>
   </section>
 
+  </div>
+
+  <div data-view="rankings">
+    <div class="lb-controls">
+      <div class="control">
+        <label for="rkConfFilter">Conference</label>
+        <select id="rkConfFilter"></select>
+      </div>
+      <div class="control">
+        <label for="rkSearch">Search</label>
+        <input id="rkSearch" placeholder="Filter by team name…" autocomplete="off">
+      </div>
+    </div>
+    <div class="scope-note" id="rkNote" style="max-width:none"></div>
+    <div class="lb-table-wrap">
+      <table class="lb" id="rkTable">
+        <thead><tr id="rkHead"></tr></thead>
+        <tbody id="rkBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div data-view="leaderboard">
@@ -1340,12 +1361,12 @@
   }
 
   // ---------- tabs ----------
-  var tabBtns = [document.getElementById('tabBtnTeam'), document.getElementById('tabBtnLeaderboard')];
-  var views = { team: document.querySelector('[data-view="team"]'), leaderboard: document.querySelector('[data-view="leaderboard"]') };
+  var tabBtns = [document.getElementById('tabBtnTeam'), document.getElementById('tabBtnLeaderboard'), document.getElementById('tabBtnRankings')];
+  var views = { team: document.querySelector('[data-view="team"]'), leaderboard: document.querySelector('[data-view="leaderboard"]'), rankings: document.querySelector('[data-view="rankings"]') };
   function setTab(target){
     tabBtns.forEach(function(b){ var on = b.getAttribute('data-target')===target; b.classList.toggle('active',on); b.setAttribute('aria-selected', on?'true':'false'); });
     Object.keys(views).forEach(function(k){ views[k].classList.toggle('active', k===target); });
-    if(target==='leaderboard') renderLeaderboard();
+    if(target==='leaderboard') renderLeaderboard(); if(target==='rankings') renderRankings();
   }
   tabBtns.forEach(function(b){ b.addEventListener('click', function(){ setTab(b.getAttribute('data-target')); }); });
 
@@ -1473,6 +1494,59 @@
   if(!DATA.teamsAdj){ document.getElementById('adjToggle').style.display = 'none'; }
   document.getElementById('modeRaw').addEventListener('click', function(){ setMode(false); });
   document.getElementById('modeAdj').addEventListener('click', function(){ setMode(true); });
+
+  // ---------- Rankings tab (opponent-adjusted composite ranks + schedule) ----------
+  var RK_COLS = [
+    { key:'pos', label:'#', type:'pos' },
+    { key:'team', label:'Team', type:'text' },
+    { key:'conf', label:'Conf', type:'text' },
+    { key:'record', label:'W-L', type:'text' },
+    { key:'off', label:'Adj Offense', type:'rank' }, { key:'def', label:'Adj Defense', type:'rank' },
+    { key:'rushOff', label:'Rush O', type:'rank' }, { key:'passOff', label:'Pass O', type:'rank' },
+    { key:'rushDef', label:'Rush D', type:'rank' }, { key:'passDef', label:'Pass D', type:'rank' },
+    { key:'sos', label:'Schedule', type:'rank' }, { key:'opp', label:'Avg Opp Rating', type:'num1' }
+  ];
+  var rkSort = { key:'off', dir:1 };
+  var rkConf = document.getElementById('rkConfFilter'), rkSearch = document.getElementById('rkSearch');
+  (function(){ var o=document.createElement('option'); o.value='all'; o.textContent='All conferences'; rkConf.appendChild(o);
+    confs.forEach(function(c){ var x=document.createElement('option'); x.value=c; x.textContent=c; rkConf.appendChild(x); }); rkConf.value='all'; })();
+  function renderRankings(){
+    var A = DATA.teamsAdj; if(!A) return;
+    var o = (DATA.meta && DATA.meta.oppAdj) || {};
+    document.getElementById('rkNote').textContent = 'Opponent-adjusted composite ranks (1 = best; hover a column for its recipe). Schedule: 1 = hardest, by average opponent power rating. Ratings through Week '+(o.ratingsThroughWeek||'?')+'.';
+    var tr = document.getElementById('rkHead'); tr.innerHTML='';
+    var TIPS = { off:'EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%',
+      def:'Same recipe, allowed', rushOff:'EPA/rush 35%, rush SR 20%, opportunity rate 15%, explosive runs 10%, line yards 10%, stuff rate 10%',
+      passOff:'EPA/dropback 35%, pass SR 20%, early-down pass SR 15%, explosive passes 15%, yards/dropback 15%', rushDef:'Rush recipe, allowed', passDef:'Pass recipe, allowed',
+      sos:'Average opponent power rating over the games used, 1 = hardest', opp:'Average opponent power rating (points vs average)' };
+    RK_COLS.forEach(function(col){
+      var th=document.createElement('th'); th.textContent=col.label; if(TIPS[col.key]) th.title=TIPS[col.key];
+      if(col.key===rkSort.key){ th.classList.add('sorted'); var ar=document.createElement('span'); ar.className='arrow'; ar.textContent=rkSort.dir===1?'\u25B2':'\u25BC'; th.appendChild(ar); }
+      if(col.type==='rank' || col.type==='num1'){ th.addEventListener('click', function(){
+        if(rkSort.key===col.key) rkSort.dir*=-1; else { rkSort.key=col.key; rkSort.dir = col.type==='num1' ? -1 : 1; }
+        renderRankings(); }); }
+      tr.appendChild(th);
+    });
+    var q=(rkSearch.value||'').toLowerCase(), cf=rkConf.value;
+    var rows = teamKeys.filter(function(k){ return A[k] && A[k].adjRank && (cf==='all' || DATA.teams[k].confLabel===cf) && (!q || k.toLowerCase().indexOf(q)>-1); })
+      .map(function(k){ var r=A[k].adjRank, t=DATA.teams[k];
+        return { team:k, conf:t.confLabel, record:t.wins+'-'+t.losses, off:r.off, def:r.def, rushOff:r.rushOff, passOff:r.passOff,
+                 rushDef:r.rushDef, passDef:r.passDef, sos:A[k].sos?A[k].sos.rank:null, opp:A[k].sos?A[k].sos.avgOppRating:null }; });
+    rows.sort(function(a,b){ var av=a[rkSort.key], bv=b[rkSort.key];
+      av=(av===null||av===undefined)?Infinity*rkSort.dir:av; bv=(bv===null||bv===undefined)?Infinity*rkSort.dir:bv; return rkSort.dir*(av-bv); });
+    var body=document.getElementById('rkBody'); body.innerHTML='';
+    rows.forEach(function(row,i){ var r=document.createElement('tr');
+      RK_COLS.forEach(function(col){ var td=document.createElement('td');
+        if(col.type==='pos'){ td.className='rk'; td.textContent=i+1; }
+        else if(col.type==='text'){ td.textContent=row[col.key]; }
+        else if(col.type==='num1'){ td.className='num'; td.textContent=row[col.key]===null?'\u2014':row[col.key].toFixed(1); }
+        else { td.className='num'; td.textContent=row[col.key]===null||row[col.key]===undefined?'\u2014':row[col.key]; }
+        r.appendChild(td); });
+      body.appendChild(r); });
+  }
+  rkConf.addEventListener('change', renderRankings);
+  rkSearch.addEventListener('input', renderRankings);
+  if(!DATA.teamsAdj){ document.getElementById('tabBtnRankings').style.display='none'; }
 
   confFilter.value = 'all';
   populateTeamOptions();

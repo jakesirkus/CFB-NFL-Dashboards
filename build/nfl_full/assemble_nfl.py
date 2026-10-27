@@ -127,4 +127,5 @@ _x=['python3','-I','../add_xpts.py','nfl',out_html,out_html,'--all']+(['--prev',
 _sp.run(_x,check=True)
 # opponent adjustments (user's power ratings, blend 0.25 (25% at-the-time / 75% current); Oct 27)
 _sp.run(['python3','-I','../patch_oppadj_ui.py',out_html],check=True)
+_sp.run(['python3','-I','../patch_rankings_ui.py',out_html],check=True)   # Rankings tab (Oct 27)
 _sp.run(['python3','-I','../opp_adjust.py','nfl',out_html,out_html,'--blend','0.25'],check=True)
