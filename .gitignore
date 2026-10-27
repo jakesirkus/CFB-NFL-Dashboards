@@ -8,3 +8,7 @@ build/cfb_full/full_season_*.json
 build/cfb_full/out*_pre/
 build/cfb_full/boxes_added_pending.pkl
 build/cfb_full/*_finals_raw.json
+# the user's private power ratings: never commit (public repo)
+build/ratings/nfl.json
+build/ratings/cfb.json
+*.xlsx
