@@ -1192,7 +1192,7 @@
     var arc = document.getElementById('adjRankChip');
     if(arc){ if(t.adjRank){ arc.hidden = false;
         arc.textContent = 'Adj. Offense #'+t.adjRank.off+' · Adj. Defense #'+t.adjRank.def+' (of '+total+')';
-        arc.title = 'Opponent-adjusted composite: EPA/play 35%, success rate 20%, EPA/drive 20%, points per opportunity 15%, explosive rate 10%';
+        arc.title = 'Opponent-adjusted composite: EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%';
       } else { arc.hidden = true; } }
     document.getElementById('mYpp').textContent = num(t.ypp,1);
     document.getElementById('mYppAllowed').textContent = num(t.yppAllowed,1);

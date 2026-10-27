@@ -74,8 +74,8 @@ y = mu + bOff*R_off + bDef*R_def + home + shrunk unit residuals; R = 0.5*(rating
 CFB uses FBS-vs-FBS games only. `opp_adjust.py LG IN OUT --blend 0.5` adds DATA.teamsAdj (rates, ranks, radar);
 `opp_adjust.py LG IN /dev/null --cv` re-runs the cross-validation (lambdas in ratings/*_cv.json). `patch_oppadj_ui.py` adds the toggle.
 Both run in rebuild_wN.sh / assemble_nfl.py; with no ratings file the step is skipped and the toggle hidden.
-Composite adjusted Offense/Defense rank (team header chip, adjusted mode only): z-scored adjusted EPA/play 35%, success rate 20%,
-EPA/drive 20%, points per opportunity 15%, explosive rate 10% (COMP in opp_adjust.py).
+Composite adjusted Offense/Defense rank (team header chip, adjusted mode only): z-scored adjusted EPA/play 30%, early-down EPA/play 15%,
+success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10% (COMP in opp_adjust.py).
 Weekly: when the user sends updated workbooks, re-run read_ratings.py before the build. Test: `node verify_adj.js PAGE "Team"`.
 
 ## Publish to GitHub

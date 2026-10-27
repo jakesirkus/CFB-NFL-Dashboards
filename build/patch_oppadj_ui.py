@@ -32,7 +32,7 @@ CHIP_JS = """
     var arc = document.getElementById('adjRankChip');
     if(arc){ if(t.adjRank){ arc.hidden = false;
         arc.textContent = 'Adj. Offense #'+t.adjRank.off+' \u00b7 Adj. Defense #'+t.adjRank.def+' (of '+total+')';
-        arc.title = 'Opponent-adjusted composite: EPA/play 35%, success rate 20%, EPA/drive 20%, points per opportunity 15%, explosive rate 10%';
+        arc.title = 'Opponent-adjusted composite: EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%';
       } else { arc.hidden = true; } }"""
 def chip(s, p):                       # composite adjusted off/def rank chip in the team header (Oct 27)
     if 'id="adjRankChip"' in s: return s

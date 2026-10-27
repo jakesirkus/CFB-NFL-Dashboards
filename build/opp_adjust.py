@@ -148,7 +148,7 @@ for side, rk in (('off', 'offRaw'), ('def', 'defRaw')):
             v = TA[t]['radar'][rk][m]
             TA[t]['radar'][side][m] = round(float(100 * ((sgn * arr) <= sgn * v + 1e-12).sum() / len(arr)), 1)
 # ---------- composite opponent-adjusted offense / defense ranks ----------
-COMP = {'epaPlay': 0.35, 'successRate': 0.20, 'epaPerDrive': 0.20, 'ppo': 0.15, 'explosivePct': 0.10}
+COMP = {'epaPlay': 0.30, 'earlyEpa': 0.15, 'successRate': 0.15, 'epaPerDrive': 0.20, 'ppo': 0.10, 'explosivePct': 0.10}
 for side, sgn in (('off', 1), ('def', -1)):            # defense: allowing less is better
     score = {t: 0.0 for t in TEAMS}
     for m, wt in COMP.items():
