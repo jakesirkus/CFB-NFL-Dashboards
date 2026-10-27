@@ -158,6 +158,12 @@ for side, sgn in (('off', 1), ('def', -1)):            # defense: allowing less 
     order = sorted(TEAMS, key=lambda t: -score[t])
     for i, t in enumerate(order):
         TA[t].setdefault('adjRank', {})[side] = i + 1; TA[t]['adjRank'][side + 'Score'] = round(score[t], 3)
+# ---------- strength of schedule: average blended opponent rating (games used by the adjustment), rank 1 = hardest ----------
+SOS = {}
+for t in TEAMS:
+    rs = [rating(r[3], r[1], BLEND) + CUR_MEAN for r in FBS_ROWS['epaPlay'] if r[2] == t]
+    if rs: SOS[t] = float(np.mean(rs))
+for i, t in enumerate(sorted(SOS, key=lambda u: -SOS[u])): TA[t]['sos'] = {'avgOppRating': round(SOS[t], 2), 'rank': i + 1}
 D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),

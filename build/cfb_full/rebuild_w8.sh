@@ -18,6 +18,6 @@ python3 -I ../add_ppo.py out6/index.html out6/index.html | tail -1
 python3 -I ../add_early_sr.py cfb out6
 # box-score expected score: new games + the two games whose box scores were regenerated above
 python3 -I ../add_xpts.py cfb out6/index.html out6/index.html --recompute 3_401864443,4_401864509,1_401856667,2_401856787,1_401858212
-# opponent adjustments (user's power ratings, blend 0.5; Oct 27) - Raw/Adjusted toggle
+# opponent adjustments (user's power ratings, blend 0.25 (25% at-the-time / 75% current); Oct 27) - Raw/Adjusted toggle
 python3 -I ../patch_oppadj_ui.py out6/index.html
-python3 -I ../opp_adjust.py cfb out6/index.html out6/index.html --blend 0.5
+python3 -I ../opp_adjust.py cfb out6/index.html out6/index.html --blend 0.25

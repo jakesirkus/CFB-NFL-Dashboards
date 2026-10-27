@@ -70,12 +70,13 @@ Render check: `node verify_box_esr.js PAGE.html "Team"`.
 ## Opponent adjustments (Oct 27) — Raw / Opponent-adjusted toggle
 Uses the USER'S weekly power ratings (private: build/ratings/{nfl,cfb}.json are git-ignored; after a workspace reset ask
 for the model workbooks, then `read_ratings.py nfl|cfb WORKBOOK.xlsx`). Model per stat (opp_metrics.py): game-level weighted ridge,
-y = mu + bOff*R_off + bDef*R_def + home + shrunk unit residuals; R = 0.5*(rating going into that week) + 0.5*(current).
-CFB uses FBS-vs-FBS games only. `opp_adjust.py LG IN OUT --blend 0.5` adds DATA.teamsAdj (rates, ranks, radar);
+y = mu + bOff*R_off + bDef*R_def + home + shrunk unit residuals; R = 0.25*(rating going into that week) + 0.75*(current)  (user's choice, Oct 27).
+CFB uses FBS-vs-FBS games only. `opp_adjust.py LG IN OUT --blend 0.25` adds DATA.teamsAdj (rates, ranks, radar);
 `opp_adjust.py LG IN /dev/null --cv` re-runs the cross-validation (lambdas in ratings/*_cv.json). `patch_oppadj_ui.py` adds the toggle.
 Both run in rebuild_wN.sh / assemble_nfl.py; with no ratings file the step is skipped and the toggle hidden.
 Composite adjusted Offense/Defense rank (team header chip, adjusted mode only): z-scored adjusted EPA/play 30%, early-down EPA/play 15%,
 success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10% (COMP in opp_adjust.py).
+Header chip also shows Schedule #N = average blended opponent rating (games used by the adjustment), 1 = hardest.
 Weekly: when the user sends updated workbooks, re-run read_ratings.py before the build. Test: `node verify_adj.js PAGE "Team"`.
 
 ## Publish to GitHub

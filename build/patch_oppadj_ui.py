@@ -31,9 +31,13 @@ CHIP_HTML = '\n        <span class="chip" id="adjRankChip" hidden></span>'
 CHIP_JS = """
     var arc = document.getElementById('adjRankChip');
     if(arc){ if(t.adjRank){ arc.hidden = false;
-        arc.textContent = 'Adj. Offense #'+t.adjRank.off+' \u00b7 Adj. Defense #'+t.adjRank.def+' (of '+total+')';
-        arc.title = 'Opponent-adjusted composite: EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%';
+        arc.textContent = 'Adj. Offense #'+t.adjRank.off+' \u00b7 Adj. Defense #'+t.adjRank.def+(t.sos?' \u00b7 Schedule #'+t.sos.rank:'')+' (of '+total+')';
+        arc.title = 'Opponent-adjusted composite: EPA/play 30%, early-down EPA/play 15%, success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10%'+(t.sos?'. Schedule #'+t.sos.rank+' = average opponent power rating '+t.sos.avgOppRating.toFixed(1)+' (1 = hardest)':'');
       } else { arc.hidden = true; } }"""
+UPGRADES = [("""arc.textContent = 'Adj. Offense #'+t.adjRank.off+' \u00b7 Adj. Defense #'+t.adjRank.def+' (of '+total+')';""",
+              """arc.textContent = 'Adj. Offense #'+t.adjRank.off+' \u00b7 Adj. Defense #'+t.adjRank.def+(t.sos?' \u00b7 Schedule #'+t.sos.rank:'')+' (of '+total+')';"""),
+            ("points per opportunity 10%, explosive rate 10%';",
+             "points per opportunity 10%, explosive rate 10%'+(t.sos?'. Schedule #'+t.sos.rank+' = average opponent power rating '+t.sos.avgOppRating.toFixed(1)+' (1 = hardest)':'');")]
 def chip(s, p):                       # composite adjusted off/def rank chip in the team header (Oct 27)
     if 'id="adjRankChip"' in s: return s
     a = '<span class="chip" id="teamGp">\u2014</span>' if '<span class="chip" id="teamGp">\u2014</span>' in s else '<span class="chip" id="teamGp">—</span>'
@@ -46,6 +50,7 @@ for p in sys.argv[1:]:
     s = open(p).read()
     if 'id="adjToggle"' in s:
         s2 = chip(s, p)
+        for o, n in UPGRADES: s2 = s2.replace(o, n)
         if s2 != s: open(p, 'w').write(s2); print(p, 'rank chip added')
         else: print(p, 'already patched')
         continue

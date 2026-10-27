@@ -125,6 +125,6 @@ _sp.run(['python3','-I','../add_early_sr.py','nfl',out_html,out_html],check=True
 # box-score expected score (fixed model in ../xpts_model.json); PREV=<previous published nfl_vNN.html> keeps unchanged games' values
 _x=['python3','-I','../add_xpts.py','nfl',out_html,out_html,'--all']+(['--prev',__import__('os').environ['PREV']] if __import__('os').environ.get('PREV') else [])
 _sp.run(_x,check=True)
-# opponent adjustments (user's power ratings, blend 0.5; Oct 27)
+# opponent adjustments (user's power ratings, blend 0.25 (25% at-the-time / 75% current); Oct 27)
 _sp.run(['python3','-I','../patch_oppadj_ui.py',out_html],check=True)
-_sp.run(['python3','-I','../opp_adjust.py','nfl',out_html,out_html,'--blend','0.5'],check=True)
+_sp.run(['python3','-I','../opp_adjust.py','nfl',out_html,out_html,'--blend','0.25'],check=True)
