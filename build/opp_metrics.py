@@ -6,6 +6,7 @@ Season value = sum(w*v)/sum(w) over games, which reproduces the season numbers (
 def V(x): return x['value'] if isinstance(x, dict) and 'value' in x else x
 def _n(x): return float(V(x) or 0)
 def drop(b): return _n(b['production']['scrimPlays']) - _n(b['rushing']['rushAtt'])          # dropbacks (incl. sacks/scrambles)
+def L(b): return b['line']                                                                   # KeyError -> game skipped
 def ratio(num, den): return (100.0 * num / den) if den else None
 def comb(b, a, ra, c, rc):                                                                    # combine two sub-rates by count
     s = b['situational']; n1, n2 = _n(s[a]), _n(s[c]); n = n1 + n2
@@ -41,6 +42,21 @@ M = {
  'ypa':            lambda b: (V(b['overall']['passYpp']),             drop(b)),
  'thirdPct':       lambda b: (ratio(_n(b['conversions']['thirdConv']), _n(b['conversions']['thirdAtt'])), _n(b['conversions']['thirdAtt'])),
  'epaPerDrive':    lambda b: (V(b['overall']['epaPerDrive']),         _n(b['drives']['total'])),
+ # ---- offensive / defensive line (team play-by-play): offense side = OL, defense side = DL ----
+ 'powerPct':       lambda b: (V(b['rushing']['powerRate']),           _n(b['rushing']['powerAtt'])),
+ 'sackPct':        lambda b: (ratio(_n(b['_opp']['defensive']['sacks']), drop(b)), drop(b)),       # sacks allowed per dropback
+ # ---- line, PFF player composites (add_line_stats.py) ----
+ # OL stats come from this team's box; DL stats from the opponent's box, i.e. the DL this offense faced
+ # (so the defense side of a dl* stat is that team's own DL and the offense side is 'DL faced')
+ 'olPbGrade':      lambda b: (L(b)['olPbGrade'],  L(b)['olPbSnaps']),
+ 'olPbe':          lambda b: (L(b)['olPbe'],      L(b)['olPbSnaps']),
+ 'olPressPct':     lambda b: (L(b)['olPressPct'], L(b)['olPbSnaps']),
+ 'olRbGrade':      lambda b: (L(b)['olRbGrade'],  L(b)['olRbSnaps']),
+ 'dlPrGrade':      lambda b: (L(b['_opp'])['dlPrGrade'],  L(b['_opp'])['dlPrSnaps']),
+ 'dlPrwr':         lambda b: (L(b['_opp'])['dlPrwr'],     L(b['_opp'])['dlPrSnaps']),
+ 'dlPressPct':     lambda b: (L(b['_opp'])['dlPressPct'], L(b['_opp'])['dlPrSnaps']),
+ 'dlRdGrade':      lambda b: (L(b['_opp'])['dlRdGrade'],  L(b['_opp'])['dlRunSnaps']),
+ 'dlStopPct':      lambda b: (L(b['_opp'])['dlStopPct'],  L(b['_opp'])['dlRunSnaps']),
 }
 # season-table field (offense, defense) for the non-radar stats, and for radar stats that are also season fields
 SEASON = {'ypp': ('ypp', 'yppAllowed'), 'ypr': ('ypr', 'yprAllowed'), 'ypa': ('ypa', 'ypaAllowed'),

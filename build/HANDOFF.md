@@ -86,6 +86,17 @@ Rankings tab (patch_rankings_ui.py): sortable table of all adjusted composite ra
 Header chip also shows Schedule #N = average blended opponent rating (games used by the adjustment), 1 = hardest.
 Weekly: when the user sends updated workbooks, re-run read_ratings.py before the build. Test: `node verify_adj.js PAGE "Team"`.
 
+## OL / DL line stats (Oct 27) — Lines tab, header chip 'OL # · DL #', Rankings OL/DL columns, Matchup trenches
+Two halves, both opponent-adjusted with the same ridge model (opp_metrics.py / LINE in opp_adjust.py):
+- Team play-by-play: sack rate (sacks allowed / generated per dropback), line yards, stuff rate, opportunity rate, power success.
+- PFF player composite: `pff_fetch.py nfl|cfb 2026 WEEK...` caches weekly league-wide facets (pass_blocking, run_blocking,
+  pass_rush, run D + games) in build/pff/raw/ (git-ignored; key in /home/claude/.secrets/pff_key, `Authorization: Bearer`, never commit).
+  `add_line_stats.py LG IN OUT` matches PFF games to ours (teams + final score, week +-1), maps franchises, and writes box[team]['line']:
+  OL (T/G/C) snap-weighted pass/run-block grades, PBE, pressure rate; DL (DI/ED) pass-rush grade, win rate, pressure rate, run-D grade, stop rate.
+- Ranks: olStats/olPff/dlStats/dlPff, passPro/runBlock/passRush/runDef, overall ol/dl = 50/50 team stats + PFF. teamsAdj[t].lineVals = raw + adjusted values.
+Weekly: run pff_fetch.py for the new week BEFORE the build (rebuild_wN.sh / assemble_nfl.py run add_line_stats + patch_lines_ui).
+User OK'd publishing PFF-derived numbers on the public site (Oct 27). Test: `node verify_lines.js PAGE "Team A" "Team B"`.
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).

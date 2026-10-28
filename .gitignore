@@ -12,3 +12,4 @@ build/cfb_full/*_finals_raw.json
 build/ratings/nfl.json
 build/ratings/cfb.json
 *.xlsx
+build/pff/raw/

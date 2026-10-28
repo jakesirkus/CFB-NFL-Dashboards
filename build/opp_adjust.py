@@ -37,6 +37,7 @@ for gk, v in D['boxscores'].items():
         o = ts[1] if t == ts[0] else ts[0]; b = v[t]
         if t not in D['teams'] and o not in D['teams']: continue
         fbs = t in D['teams'] and o in D['teams']
+        b = dict(b); b['_opp'] = v[o]          # line stats need the opponent's box (sacks, DL)
         for m, fn in M.items():
             try: y, w = fn(b)
             except (KeyError, TypeError): continue
@@ -151,7 +152,8 @@ for side, rk in (('off', 'offRaw'), ('def', 'defRaw')):
 COMP = {'epaPlay': 0.30, 'earlyEpa': 0.15, 'successRate': 0.15, 'epaPerDrive': 0.20, 'ppo': 0.10, 'explosivePct': 0.10}
 RUSH = {'rushEpa': 0.35, 'rushSR': 0.20, 'opportunityPct': 0.15, 'rushExplPct': 0.10, 'lineYards': 0.10, 'stuffPct': 0.10}
 PASS = {('dbEpa' if LG == 'nfl' else 'passEpa'): 0.35, 'passSR': 0.20, 'earlyPassSR': 0.15, 'passExplPct': 0.15, 'ydsPerDb': 0.15}
-LOW_BETTER_FOR_OFFENSE = {'stuffPct'}                   # being stuffed is bad for an offense, good for a defense
+LOW_BETTER_FOR_OFFENSE = {'stuffPct', 'sackPct', 'olPressPct',            # being stuffed / sacked / pressured is bad for an offense
+                          'dlPrGrade', 'dlPrwr', 'dlPressPct', 'dlRdGrade', 'dlStopPct'}   # dl*: the DL faced (defense side = own DL)
 CATS = (('', COMP), ('rush', RUSH), ('pass', PASS))     # adjRank keys: off/def, rushOff/rushDef, passOff/passDef
 for cat, comp in CATS:
     for side, base in (('off', 1), ('def', -1)):        # defense: allowing less is better
@@ -164,6 +166,46 @@ for cat, comp in CATS:
             for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) or not sd_ else sgn * (v - mu_) / sd_)
         for i, t in enumerate(sorted(TEAMS, key=lambda t: -score[t])):
             TA[t].setdefault('adjRank', {})[key] = i + 1; TA[t]['adjRank'][key + 'Score'] = round(score[t], 3)
+# ---------- offensive / defensive line composites (team play-by-play + PFF player composites), opponent-adjusted ----------
+RUNL = {'lineYards': 0.25, 'stuffPct': 0.15, 'opportunityPct': 0.12, 'powerPct': 0.08}
+LINE = {   # key: (side, recipe)     side 'off' = this team's OL, 'def' = this team's DL
+    'olStats':  ('off', dict(RUNL, sackPct=0.40)),
+    'olPff':    ('off', {'olPbGrade': 0.30, 'olPbe': 0.20, 'olPressPct': 0.10, 'olRbGrade': 0.40}),
+    'dlStats':  ('def', dict(RUNL, sackPct=0.40)),
+    'dlPff':    ('def', {'dlPrGrade': 0.20, 'dlPrwr': 0.20, 'dlPressPct': 0.10, 'dlRdGrade': 0.30, 'dlStopPct': 0.20}),
+    'passPro':  ('off', {'sackPct': 0.50, 'olPbGrade': 0.20, 'olPbe': 0.20, 'olPressPct': 0.10}),
+    'runBlock': ('off', {'lineYards': 0.20, 'stuffPct': 0.12, 'opportunityPct': 0.10, 'powerPct': 0.08, 'olRbGrade': 0.50}),
+    'passRush': ('def', {'sackPct': 0.40, 'dlPrGrade': 0.20, 'dlPrwr': 0.25, 'dlPressPct': 0.15}),
+    'runDef':   ('def', {'lineYards': 0.20, 'stuffPct': 0.12, 'opportunityPct': 0.10, 'powerPct': 0.08, 'dlRdGrade': 0.30, 'dlStopPct': 0.20}),
+}
+def zscore(comp, side):
+    base = 1 if side == 'off' else -1; score = {t: 0.0 for t in TEAMS}
+    for m, wt in comp.items():
+        sgn = -base if m in LOW_BETTER_FOR_OFFENSE else base
+        vals = np.array([ADJ.get((t, side, m), np.nan) for t in TEAMS], float)
+        if np.all(np.isnan(vals)): continue
+        mu_, sd_ = np.nanmean(vals), np.nanstd(vals)
+        for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) or not sd_ else sgn * (v - mu_) / sd_)
+    return score
+def put_rank(key, score):
+    for i, t in enumerate(sorted(TEAMS, key=lambda t: -score[t])):
+        TA[t].setdefault('adjRank', {})[key] = i + 1; TA[t]['adjRank'][key + 'Score'] = round(score[t], 3)
+LS = {}
+for key, (side, comp) in LINE.items(): LS[key] = zscore(comp, side); put_rank(key, LS[key])
+def std(d):
+    v = np.array(list(d.values())); sd = v.std() or 1.0; mu = v.mean(); return {t: (x - mu) / sd for t, x in d.items()}
+for key, a_, b_ in (('ol', 'olStats', 'olPff'), ('dl', 'dlStats', 'dlPff')):    # overall OL / DL = half team stats, half PFF players
+    za, zb = std(LS[a_]), std(LS[b_]); put_rank(key, {t: 0.5 * za[t] + 0.5 * zb[t] for t in TEAMS})
+LINE_STATS = sorted({m for _, comp in LINE.values() for m in comp})
+for t in TEAMS:
+    lv = {}
+    for m in LINE_STATS:
+        e = {}
+        for side, k in (('off', 'o'), ('def', 'd')):
+            if (t, side, m) in ADJ:
+                e[k + 'a'] = round(float(ADJ[(t, side, m)]), 3); e[k] = round(float(ADJ[(t, side, m)] - delta[(t, side, m)]), 3)
+        if e: lv[m] = e
+    TA[t]['lineVals'] = lv
 # ---------- strength of schedule: average blended opponent rating (games used by the adjustment), rank 1 = hardest ----------
 SOS = {}
 for t in TEAMS:
@@ -184,7 +226,8 @@ D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
                        'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
-                       'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS}
+                       'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS,
+                       'line': {k: {'side': v[0], 'recipe': v[1]} for k, v in LINE.items()}, 'lowBetterForOffense': sorted(LOW_BETTER_FOR_OFFENSE)}
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a0] + js + s[b0:])
 print(f'{LG}: opponent adjustment written (blend {BLEND}, {len(METRICS)} stats, {len(delta)} team-side deltas)')

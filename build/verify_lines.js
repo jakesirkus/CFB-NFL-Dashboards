@@ -1,0 +1,22 @@
+// Lines tab / OL-DL chip / Rankings OL-DL / Matchup trenches smoke test. usage: node verify_lines.js PAGE.html "Team A" "Team B"
+const fs=require('fs'); const {JSDOM}=require('jsdom');
+const dom=new JSDOM(fs.readFileSync(process.argv[2],'utf8'),{runScripts:'dangerously',pretendToBeVisual:true}); const w=dom.window,d=w.document,wait=ms=>new Promise(r=>setTimeout(r,ms)); const e=[]; w.addEventListener('error',x=>e.push(x.message));
+const rows=id=>[...d.querySelectorAll('#'+id+' tr')].map(r=>r.textContent.replace(/\s+/g,' ').trim());
+(async()=>{await wait(1500);
+ const btn=d.getElementById('tabBtnLines'); console.log('lines tab visible:', btn.style.display!=='none');
+ btn.click(); await wait(150); console.log('note:',d.getElementById('lnNote').textContent.slice(0,90));
+ console.log('OL head:',rows('lnHead')[0]); rows('lnBody').slice(0,4).forEach(r=>console.log('  ',r)); console.log('  rows',rows('lnBody').length);
+ d.getElementById('modeAdj').click(); await wait(150); console.log('adjusted first row:',rows('lnBody')[0]);
+ const u=d.getElementById('lnUnit'); u.value='dl'; u.dispatchEvent(new w.Event('change')); await wait(150);
+ console.log('DL head:',rows('lnHead')[0]); rows('lnBody').slice(0,3).forEach(r=>console.log('  ',r));
+ [...d.querySelectorAll('#lnHead th')][9].click(); await wait(100); console.log('sorted by sack%:',rows('lnBody')[0]);
+ d.getElementById('tabBtnRankings').click(); await wait(150); console.log('rankings head:',rows('rkHead')[0]); console.log('  ',rows('rkBody')[0]);
+ d.getElementById('tabBtnMatchup').click(); await wait(150);
+ const A=d.getElementById('mtA'),B=d.getElementById('mtB'); A.value=process.argv[3]; B.value=process.argv[4]; A.dispatchEvent(new w.Event('change')); await wait(150);
+ const T=[...d.querySelectorAll('#mtOut table.mt')].map(t=>[...t.querySelectorAll('tr')].map(r=>r.textContent.replace(/\s+/g,' ').trim()));
+ console.log('unit rows:'); T[0].slice(6).forEach(r=>console.log('  ',r));
+ console.log('tables',T.length,'trench A:'); T[3].forEach(r=>console.log('  ',r));
+ d.getElementById('tabBtnTeam').click(); await wait(150);
+ const sel=d.querySelector('select#teamSelect')||d.querySelector('#teamSelect'); 
+ console.log('chip:',d.getElementById('adjLineChip').textContent,'| hidden',d.getElementById('adjLineChip').hidden);
+ console.log('errors',e.length,e.slice(0,3)); })();
