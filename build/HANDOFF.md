@@ -97,6 +97,13 @@ Two halves, both opponent-adjusted with the same ridge model (opp_metrics.py / L
 Weekly: run pff_fetch.py for the new week BEFORE the build (rebuild_wN.sh / assemble_nfl.py run add_line_stats + patch_lines_ui).
 User OK'd publishing PFF-derived numbers on the public site (Oct 27). Test: `node verify_lines.js PAGE "Team A" "Team B"`.
 
+## Off-schedule run rate (Oct 28)
+FantasyPoints definition: run held under 4 yds on 1st down / under 3 on 2nd-4th, unless it converts or scores (lost fumble never converts;
+kneels and 2-pt tries excluded). `add_offsched.py cfb OUT_DIR prepped_to.pkl` / `add_offsched.py nfl IN OUT PBP.pkl` adds rushing.offSchedAtt/Runs/Rate
+to every box + split (asserts run count == rushAtt) and teams.offSchedPct / offSchedPctAllowed; opponent-adjusted via SEASON in opp_metrics.py.
+`patch_offsched_ui.py` adds the box-score row (Rushing section) and two Leaderboard columns. Stuff % (yds<=0) is unchanged and stays in the line ranks.
+Note: Rush SR / success rate on the site is EPA-based (EPA > 0), not a yards-to-go rule. Test: `node verify_offsched.js PAGE "Team"`.
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).

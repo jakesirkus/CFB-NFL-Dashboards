@@ -152,7 +152,7 @@ for side, rk in (('off', 'offRaw'), ('def', 'defRaw')):
 COMP = {'epaPlay': 0.30, 'earlyEpa': 0.15, 'successRate': 0.15, 'epaPerDrive': 0.20, 'ppo': 0.10, 'explosivePct': 0.10}
 RUSH = {'rushEpa': 0.35, 'rushSR': 0.20, 'opportunityPct': 0.15, 'rushExplPct': 0.10, 'lineYards': 0.10, 'stuffPct': 0.10}
 PASS = {('dbEpa' if LG == 'nfl' else 'passEpa'): 0.35, 'passSR': 0.20, 'earlyPassSR': 0.15, 'passExplPct': 0.15, 'ydsPerDb': 0.15}
-LOW_BETTER_FOR_OFFENSE = {'stuffPct', 'sackPct', 'olPressPct',            # being stuffed / sacked / pressured is bad for an offense
+LOW_BETTER_FOR_OFFENSE = {'stuffPct', 'sackPct', 'olPressPct', 'offSchedPct',            # being stuffed / sacked / pressured is bad for an offense
                           'dlPrGrade', 'dlPrwr', 'dlPressPct', 'dlRdGrade', 'dlStopPct'}   # dl*: the DL faced (defense side = own DL)
 CATS = (('', COMP), ('rush', RUSH), ('pass', PASS))     # adjRank keys: off/def, rushOff/rushDef, passOff/passDef
 for cat, comp in CATS:

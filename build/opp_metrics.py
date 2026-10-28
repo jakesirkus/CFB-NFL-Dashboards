@@ -43,6 +43,7 @@ M = {
  'thirdPct':       lambda b: (ratio(_n(b['conversions']['thirdConv']), _n(b['conversions']['thirdAtt'])), _n(b['conversions']['thirdAtt'])),
  'epaPerDrive':    lambda b: (V(b['overall']['epaPerDrive']),         _n(b['drives']['total'])),
  # ---- offensive / defensive line (team play-by-play): offense side = OL, defense side = DL ----
+ 'offSchedPct':    lambda b: (V(b['rushing']['offSchedRate']),        _n(b['rushing']['offSchedAtt'])),     # runs held off schedule
  'powerPct':       lambda b: (V(b['rushing']['powerRate']),           _n(b['rushing']['powerAtt'])),
  'sackPct':        lambda b: (ratio(_n(b['_opp']['defensive']['sacks']), drop(b)), drop(b)),       # sacks allowed per dropback
  # ---- line, PFF player composites (add_line_stats.py) ----
@@ -64,4 +65,4 @@ SEASON = {'ypp': ('ypp', 'yppAllowed'), 'ypr': ('ypr', 'yprAllowed'), 'ypa': ('y
           'passEpa': ('epaPerPass', 'epaPerPassAllowed'), 'dbEpa': ('epaPerDropback', 'epaPerDropbackAllowed'),
           'thirdPct': ('thirdPct', None), 'seriesRate': ('seriesRate', 'seriesRateAllowed'),
           'epaPerDrive': ('epaPerDrive', 'epaPerDriveAllowed'), 'ppo': ('ppo', 'ppoAllowed'),
-          'earlySR': ('earlySR', 'earlySRAllowed')}
+          'earlySR': ('earlySR', 'earlySRAllowed'), 'offSchedPct': ('offSchedPct', 'offSchedPctAllowed')}

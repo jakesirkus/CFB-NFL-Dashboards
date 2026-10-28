@@ -122,6 +122,8 @@ open(out_html,'w').write(h[:a]+s+h[b:])
 print('games',len(boxscores),'teams',len(out_teams),meta)
 import subprocess as _sp; _sp.run(['python3','-I','../add_ppo.py',out_html,out_html,'--data-only'],check=True)
 _sp.run(['python3','-I','../add_early_sr.py','nfl',out_html,out_html],check=True)   # early-down success rate (Oct 26)
+_sp.run(['python3','-I','../add_offsched.py','nfl',out_html,out_html,pbp],check=True)   # off-schedule run rate (Oct 28)
+_sp.run(['python3','-I','../patch_offsched_ui.py',out_html],check=True)
 # box-score expected score (fixed model in ../xpts_model.json); PREV=<previous published nfl_vNN.html> keeps unchanged games' values
 _x=['python3','-I','../add_xpts.py','nfl',out_html,out_html,'--all']+(['--prev',__import__('os').environ['PREV']] if __import__('os').environ.get('PREV') else [])
 _sp.run(_x,check=True)
