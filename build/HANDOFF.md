@@ -78,6 +78,8 @@ Composite adjusted Offense/Defense rank (team header chip, adjusted mode only): 
 success rate 15%, EPA/drive 20%, points per opportunity 10%, explosive rate 10% (COMP in opp_adjust.py).
 Second header chip: Rush O/Pass O/Rush D/Pass D ranks (RUSH: EPA/rush 35%, rush SR 20%, opportunity rate 15%, explosive runs 10%,
 line yards 10%, stuff rate 10%; PASS: EPA/dropback 35%, pass SR 20%, early-down pass SR 15%, explosive passes 15%, yds/dropback 15%; RUSH/PASS in opp_adjust.py).
+Matchup tab (patch_matchup_ui.py, after schedule): two teams, adjusted unit ranks face off + every radar stat O-vs-D both ways;
+edge = percentile gap (20+ edge, 40+ big edge); stats follow the Raw/Adjusted switch. Test: node verify_matchup.js PAGE A B.
 Schedule tab (patch_schedule_ui.py, after rankings): SOS overall (avg opp power rating) + by unit faced (opponents' composite
 scores: offenses, defenses, rush/pass O, rush/pass D), rank 1 = hardest, tooltip = opponents' average rank (sosUnits in opp_adjust.py).
 Rankings tab (patch_rankings_ui.py): sortable table of all adjusted composite ranks + schedule rank/avg opp rating.

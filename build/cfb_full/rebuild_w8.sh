@@ -22,4 +22,5 @@ python3 -I ../add_xpts.py cfb out6/index.html out6/index.html --recompute 3_4018
 python3 -I ../patch_oppadj_ui.py out6/index.html
 python3 -I ../patch_rankings_ui.py out6/index.html   # Rankings tab (Oct 27)
 python3 -I ../patch_schedule_ui.py out6/index.html   # Schedule tab (Oct 27)
+python3 -I ../patch_matchup_ui.py out6/index.html    # Matchup tab (Oct 27)
 python3 -I ../opp_adjust.py cfb out6/index.html out6/index.html --blend 0.25
