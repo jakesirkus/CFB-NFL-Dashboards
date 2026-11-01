@@ -104,7 +104,7 @@ def r3(x): return None if x is None else round(x, 3)
 for v in D['boxscores'].values():
     for t in v:
         if t != 'driveChart': v[t].pop('line', None)
-put = 0; ours_fbs = set()
+put = 0; ours_fbs = set(); partial = []
 for (w, f), A in agg.items():
     if (w, f) not in GAME: continue
     gk, team = GAME[(w, f)]; box = D['boxscores'][gk][team]
@@ -120,6 +120,16 @@ for (w, f), A in agg.items():
     if A['prSn']: L['dlPressPct'] = r3(100 * A['press'] / A['prSn'])
     if A['rdGs']: L['dlRdGrade'] = r3(A['rdG'] / A['rdGs'])
     if A['stopOpp']: L['dlStopPct'] = r3(100 * A['stops'] / A['stopOpp'])
+    # completeness guard: PFF posts games before charting is finished (e.g. Pitt-GT wk9 had 5 GT OL rows with 1 snap each).
+    # Keep the OL half only if OL snaps >= 60% of 5 x this team's dropbacks / runs, the DL half only if DL snaps >= 60% of
+    # 3.5 x the opponent's dropbacks / runs; otherwise that half is dropped until a later pff_fetch.py fills it in.
+    ob = next(D['boxscores'][gk][x] for x in D['boxscores'][gk] if x not in ('driveChart', team))
+    def need(bx): r = bx['rushing']['rushAtt']; return bx['production']['scrimPlays'] - r, r
+    db, ra = need(box); odb, ora = need(ob)
+    if A['pbSn'] < 0.6 * 5 * db or A['rbSn'] < 0.6 * 5 * ra:
+        L = {k: v for k, v in L.items() if not k.startswith('ol')}; partial.append(f'{gk}:{team} OL')
+    if A['prSn'] < 0.6 * 3.5 * odb or A['rdSn'] < 0.6 * 3.5 * ora:
+        L = {k: v for k, v in L.items() if not k.startswith('dl')}; partial.append(f'{gk}:{team} DL')
     box['line'] = L; put += 1
 # coverage report: team-games of dashboard teams with / without PFF line data
 tot = miss = 0; missing = []
@@ -132,4 +142,5 @@ D['meta']['lineStats'] = {'source': 'PFF player grades/charting (OL = T/G/C, DL 
                           'weeks': weeks, 'teamGames': tot, 'covered': tot - miss}
 open(DST, 'w').write(s[:a0] + json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/') + s[b0:])
 print(f'{LG}: PFF line data on {put} team-games; dashboard-team games covered {tot - miss}/{tot}; franchises mapped {len(FID)}')
+if partial: print('  PFF charting incomplete (dropped):', ', '.join(partial))
 if missing: print('  missing:', ', '.join(missing[:40]) + (' ...' if len(missing) > 40 else ''))
