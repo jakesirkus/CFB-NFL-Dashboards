@@ -88,5 +88,23 @@
    ]
   ],
   "why": "Marshall-ODU wk9: ODU's 55-yd FG try was NO GOOD; Turner-Bradshaw returned it 100 yds for a Marshall TD + PAT at the end of the half (feed typed it 'Field Goal Good'). Official 36-23 Marshall (CFBD)."
+ },
+ "40185684367": {
+  "events": [
+   [
+    "BYU",
+    7
+   ]
+  ],
+  "why": "ASU-BYU wk9: 'Sione Moa 1 Yd Fumble Recovery (Matthias Dunn Kick)' = BYU offensive TD (own fumble recovered in the end zone) + PAT; feed BYU 7-0. Official 27-20 BYU (CFBD)."
+ },
+ "401871058235": {
+  "events": [
+   [
+    "Kennesaw State",
+    6
+   ]
+  ],
+  "why": "KSU-MTSU wk9: '(  Run for Two-Point Conversion)' has no result; the feed's running score goes 7 -> 13 -> 19 (next TD + failed PAT), so the 2-pt try failed. Official 44-28 KSU (CFBD)."
  }
 }
