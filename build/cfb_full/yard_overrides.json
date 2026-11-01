@@ -2,5 +2,21 @@
  "401856723709": {
   "yards": 0,
   "why": "34-yd run (09:31 Q?) wiped out: next snap is from TENN49, behind the original spot (BAMA47); feed never logged the penalty"
+ },
+ "401867796804": {
+  "yards": 0,
+  "why": "LSU holding behind the run: text credits 'gain (0)'; feed had -22"
+ },
+ "401868243795": {
+  "yards": 0,
+  "why": "holding behind the run: text credits 'gain (0)'; feed had 24"
+ },
+ "401868386563": {
+  "yards": 0,
+  "why": "TTU holding behind the run: text credits 'gain (0)'; feed had 48"
+ },
+ "401871096629": {
+  "yards": 0,
+  "why": "ODU-Marshall wk9: Potter 8-yd run, ODU holding at the ODU26 - text credits 'gain (0)'; feed had 58"
  }
 }

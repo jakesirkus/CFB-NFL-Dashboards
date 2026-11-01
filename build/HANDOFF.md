@@ -108,6 +108,12 @@ to every box + split (asserts run count == rushAtt) and teams.offSchedPct / offS
 `patch_offsched_ui.py` adds the box-score row (Rushing section) and two Leaderboard columns. Stuff % (yds<=0) is unchanged and stays in the line ranks.
 Note: Rush SR / success rate on the site is EPA-based (EPA > 0), not a yards-to-go rule. Test: `node verify_offsched.js PAGE "Team"`.
 
+## Box-score Big Plays (Nov 1)
+`add_bigplays.py cfb OUT_DIR prepped_to.pkl` / `add_bigplays.py nfl IN OUT PBP.pkl` stores every 20+ yd rush/pass (NFL: incl. scrambles) per box and
+split as explosiveness.bigPlays [{q,c,y,k,td,t}] (asserts the 10+/15+ subsets reproduce explRush/explPass). `patch_bigplays_ui.py` adds
+20+/30+/40+ rows (40+ split pass/rush) with hover/tap lists in the Explosiveness section. Test: `node verify_bigplays.js PAGE "Team"`.
+Yardage: plays whose text credits 'gain (0)' (holding behind the run) but the feed has a big number go in yard_overrides.json (4 added Nov 1).
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).
