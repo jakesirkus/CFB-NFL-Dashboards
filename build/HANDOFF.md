@@ -8,7 +8,8 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Oct 25, 2026): **CFB Weeks 1–8 complete (all 56 Week 8 FBS-involved games) — `out6`. NFL Weeks 1–7 complete** (nfl_v36.html).
+State (Nov 1, 2026): **CFB Weeks 1-9 — `out7`** (Week 9: 52 FBS-involved games; Washington-Nebraska, Texas St-Boise St, NIU-UNLV,
+Oregon St-Fresno St were not in the CFBD feed yet - add them with a rebuild_w9.sh re-run once `/plays` has them). **NFL Weeks 1-7** (nfl_v36.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -21,6 +22,9 @@ add_ppo.py, make_github_pack.py, verify_*.js (jsdom page tests; `npm install jsd
 ```
 
 ## CFB weekly update
+Latest recipe: `cfb_full/rebuild_w9.sh` (builds the new week on top of the previous published out dir; all UI patches are idempotent).
+Week 9 new rules: make_tables retypes 'Field Goal Good' plays whose text says NO GOOD (missed-FG return TD); week-9 entries in
+score_overrides.json / flag_overrides.json / chart_overrides.py.
 Source: the CollegeFootballData API (`/plays?year=2026&week=N`, key from the user — never commit it) converted to the (`cfbd_to_csvfmt.py ref.pkl plays.json out.pkl`)
 28-column CSV-export layout (same data as the website's CSV export; Week 7 cross-checked Oct 25), or the user's CSV export.
 Only add games the API marks `completed`. Week 8 example: `rebuild_w8.sh`.

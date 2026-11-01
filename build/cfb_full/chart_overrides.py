@@ -146,6 +146,23 @@ def fix(gk, ch):
                   'playList': [{'q': 3, 'text': txt, 'scoring': True, 'penalty': False, 'down': None, 'distance': None,
                                 'goalToGo': False, 'yardline100': None}]}
             ch.insert(ch.index(a) + 1, kr)
+    # ---------------- Week 9 ----------------
+    elif gk == '9_401858278':    # SMU - Syracuse: Syracuse's 4th-qtr drive ended in an intentional-grounding safety (20-17 -> 20-19), not a TD
+        x = get(ch, 18)
+        if x['team'] == 'Syracuse' and x['result'] == 'Touchdown' and 'SAFETY' in x['playText']: x.update({'result': 'Safety', 'color': 'red'})
+    elif gk == '9_401858281':    # Pitt - GT: GT's one-play fumble drive came after Pitt's 0:08 FG in the 3rd (feed tagged it 15:00)
+        x = get(ch, 24)
+        if x['team'] == 'Georgia Tech' and x['t1'] == '15:00': x['t1'] = '0:08'
+    elif gk == '9_401858507':    # Michigan - Rutgers: Rutgers' punt-return fumble was wiped out by Michigan kick-catch interference
+        x = get(ch, 15)
+        if x['team'] == 'Michigan' and x['result'] == 'Fumble':
+            x.update({'result': 'Punt', 'color': 'gray'}); nx = get(ch, 16)
+            if nx['team'] == 'Rutgers' and nx['how'] == 'FUMB': nx['how'] = 'PUNT'
+    elif gk in ('9_401862816', '9_401871071'):    # UAB / WKU opening drives: feed lists a later play first; start = first snap
+        x = get(ch, 1)
+        x['playList'].sort(key=lambda p: -(clk(p) or 0))
+        y0 = x['playList'][0].get('yardline100')
+        if y0 is not None: x['spot1'] = float(100 - y0)
     return renum(ch)
 
 if __name__ == '__main__':

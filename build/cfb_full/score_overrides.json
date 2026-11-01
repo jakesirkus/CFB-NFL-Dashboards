@@ -52,5 +52,41 @@
    ]
   ],
   "why": "Air Force-Nevada wk4 (2OT): walk-off TD by Air Force, no try. Official 36-33 (CFBD game score); feed showed 37."
+ },
+ "401856846825": {
+  "events": [
+   [
+    "Colorado",
+    6
+   ]
+  ],
+  "why": "K-State-Colorado wk9 OT: Colorado's walk-off TD in the 2nd OT period ends the game, no try. Official 27-24 Colorado (CFBD)."
+ },
+ "401866451492": {
+  "events": [
+   [
+    "Sacramento State",
+    8
+   ]
+  ],
+  "why": "Kent St-Sac St wk9: 2-pt pass failed, but Kent PI (no play) and the re-try rush by Ene was successful. Official 31-10 (CFBD)."
+ },
+ "401858278499": {
+  "events": [
+   [
+    "SMU",
+    7
+   ]
+  ],
+  "why": "SMU-Syracuse wk9: feed text has a stray 'pass attempt Successful' after the good PAT; it's a 7-point TD (the 2-pt came on the 4th-qtr TD). Official 30-27 Syracuse (CFBD)."
+ },
+ "401871096479": {
+  "events": [
+   [
+    "Marshall",
+    7
+   ]
+  ],
+  "why": "Marshall-ODU wk9: ODU's 55-yd FG try was NO GOOD; Turner-Bradshaw returned it 100 yds for a Marshall TD + PAT at the end of the half (feed typed it 'Field Goal Good'). Official 36-23 Marshall (CFBD)."
  }
 }

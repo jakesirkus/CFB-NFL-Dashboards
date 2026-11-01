@@ -42,5 +42,18 @@
  "401858212104999901": {
   "fum_lost": true,
   "why": "FSU-SMU wk1: final play, Duce Robinson fumble 'recovered by SMU' (name-format line typed Rush)"
+ },
+ "401858507523": {
+  "st_lost": false,
+  "why": "Michigan-Rutgers wk9: Redding's punt-return fumble 'recovered by MICH' is wiped out by Michigan kick-catch interference (15 yds to the RU37); Rutgers kept the ball and scored"
+ },
+ "401862812917": {
+  "fum_lost": false,
+  "giveaway": false,
+  "why": "North Texas-FAU wk9: White's fumble 'recovered by FAU' came after an FAU face mask; UNT kept the ball (next snap UNT at the FAU04) and scored"
+ },
+ "401869944504": {
+  "st_lost": true,
+  "why": "Coastal-Georgia St wk9: double turnover - Bailey INT, then Mullings fumbled the return through the end zone (touchback, CCU ball at its 20): a giveaway for each side"
  }
 }

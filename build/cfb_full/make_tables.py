@@ -36,6 +36,8 @@ if __name__=='__main__':
     # missed / blocked field goals the feed types as 'Kickoff'
     _t=raw.PlayText.fillna('').str.lower()
     _fg=raw.PlayType.eq('Kickoff')&_t.str.contains('field goal attempt')&~_t.str.contains('kickoff|kicks off')
+    # ... and missed / blocked field goals the feed types as 'Field Goal Good' ('NO GOOD' in the text; ODU-Marshall wk9 100-yd return TD)
+    _fg=_fg|(raw.PlayType.eq('Field Goal Good')&_t.str.contains('field goal attempt')&_t.str.contains(r'no good'))
     _td=_t.str.contains(r'touchdown')&~_t.str.contains('nullified|no play')
     raw.loc[_fg,'PlayType']=np.where(_t[_fg].str.contains('blocked'), np.where(_td[_fg],'Blocked Field Goal Touchdown','Blocked Field Goal'),
                                      np.where(_td[_fg],'Missed Field Goal Return','Field Goal Missed'))
