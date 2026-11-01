@@ -108,6 +108,14 @@ to every box + split (asserts run count == rushAtt) and teams.offSchedPct / offS
 `patch_offsched_ui.py` adds the box-score row (Rushing section) and two Leaderboard columns. Stuff % (yds<=0) is unchanged and stays in the line ranks.
 Note: Rush SR / success rate on the site is EPA-based (EPA > 0), not a yards-to-go rule. Test: `node verify_offsched.js PAGE "Team"`.
 
+## Yardage audit vs official box scores (Nov 1)
+Team-game total yards checked against CFBD /games/teams (data/cfbd/teamstats_wN.json): 20+ yd misses 78 -> 27, 40+ 35 -> 6.
+Fixes: yardfix.py m7 (fumble rows: offense gets its run/catch/sack yards before 'fumble', only when the feed is 15+ off and not 0),
+m7b (name-format 'NN Yd Fumble Return' on the offense row -> 0), m8 (punt/kick-return fumble rows -> 0); prep.py credits the play's yards
+on penalty-typed rows where the play stands; drop_plays.json (make_tables drops feed duplicates: OSU-CSU wk5 4th quarter logged twice).
+regen_boxes.py no longer skips Week 7. Known leftover: OSU-CSU wk5 Oregon State still ~+129 vs official (feed broken).
+Yards/Play: user wants to KEEP the inside-the-5 exclusion (asked Nov 1).
+
 ## Box-score Big Plays (Nov 1)
 `add_bigplays.py cfb OUT_DIR prepped_to.pkl` / `add_bigplays.py nfl IN OUT PBP.pkl` stores every 20+ yd rush/pass (NFL: incl. scrambles) per box and
 split as explosiveness.bigPlays [{q,c,y,k,td,t}] (asserts the 10+/15+ subsets reproduce explRush/explPass). `patch_bigplays_ui.py` adds

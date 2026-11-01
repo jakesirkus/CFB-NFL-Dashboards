@@ -64,6 +64,25 @@ def corrected(df):
     odd=~t.str.contains(r'(?:gain|loss) \(-?\d+\)|score nullified|intentional grounding|lateral|no play',case=False)
     m6=rp&~inc&pen&odd&d['_ty'].notna()&((d.YardsGained-d['_ty']).abs()>=15)&~d.giveaway&~sc
     new[m6]=d.loc[m6,'_ty']; fix|=m6
+    # fumbles (incl. lost ones): the feed often stores the recovery/return run (UCLA-MSU wk8 '7-yd run' logged as 56,
+    # Pitt-GT wk9 '2-yd sack' as 92). The offense gets the yards of its own run/catch/sack up to the fumble (the text before 'fumble').
+    fum=t.str.contains('fumble',case=False)&~t.str.contains('lateral',case=False)
+    kick=t.str.contains(r'\bpunt\b|kickoff|kicks off',case=False)
+    fr=(rp|d.is_fumrow)&~inc&fum&~kick&~t.str.contains('intercept',case=False)   # fumble rows are typed 'Fumble Recovery (...)'
+    pre=t.map(lambda x: re.split(r'fumble', x, maxsplit=1, flags=re.I)[0])   # only the run/catch/sack before the fumble
+    def pty(x):                                         # 'for 23 yards gain (3)': the credited yards are the (N)
+        m=re.search(r'(?:gain|loss) \((-?\d+)\)', x) or re.search(r'for (-\d+) yds?\b', x)   # '(N)' credited / name-format '-1 yd'
+        return int(m.group(1)) if m else text_yards(x)
+    fty=pd.Series(np.where(fr, pre.map(pty), np.nan), index=d.index)
+    # only clearly impossible numbers; a feed 0 is left alone (the official stats often carry 0 on a fumbled sack/run)
+    m7=fr&fty.notna()&((d.YardsGained-fty).abs()>=15)&(d.YardsGained!=0)&~pre.str.contains('touchdown',case=False)
+    new[m7]=fty[m7]; fix|=m7
+    # name-format scoring line 'Chris Cole 85 Yd Fumble Return (... Kick)': the feed puts the defense's return on the offense's row
+    m7b=fr&fty.isna()&t.str.contains(r'\d+ Yd Fumble Return',case=False)&(d.YardsGained!=0)
+    new[m7b]=0; fix|=m7b
+    # punt / kickoff returns fumbled back to the kicking team are logged as its 'scrimmage' fumble row: no offensive yards
+    m8=d.is_fumrow&kick&(d.YardsGained!=0)
+    new[m8]=0; fix|=m8
     d['yards_fixed']=fix; d['YardsGained_feed']=d.YardsGained; d['YardsGained']=new
     d['yds']=np.where(d.is_penplay,0,d.YardsGained.fillna(0))
     return d.drop(columns=['_o','_next_ytg','_next_type','_ty'])

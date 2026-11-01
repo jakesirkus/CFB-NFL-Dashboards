@@ -429,7 +429,7 @@ def team_box(g, team, opp, drives, ev=None):
          'mid8PassSuccessRate':sr(m8[m8.is_pass]),'mid8RushSuccessRate':sr(m8[m8.is_rush])}
     tdr=[x for x in drives if x['team']==team and x['_scrim']>0]; odr=[x for x in drives if x['team']==opp and x['_scrim']>0]
     dsum=lambda ds,k: sum(x[k] for x in ds)
-    drv={'total':len(tdr),'avgStartFP':r1(sdiv(sum(x['spot1'] for x in tdr),len(tdr))),'playsPerDrive':sdiv(dsum(tdr,'_scrim'),len(tdr)),
+    drv={'total':len(tdr),'avgStartFP':r1(sdiv(sum(x['spot1'] for x in tdr if x['spot1'] is not None),sum(1 for x in tdr if x['spot1'] is not None))),'playsPerDrive':sdiv(dsum(tdr,'_scrim'),len(tdr)),
          'yardsPerDrive':sdiv(dsum(tdr,'_yds'),len(tdr)),'availYardsPct':r1(sdiv(100*dsum(tdr,'_yds'),dsum(tdr,'_start_ytg'))),'epaPerDrive':r1(sdiv(epa,len(tdr)),2)}
     # stop = opponent possession that ended with no points scored by either side (matches the Week 1-5 box scores)
     POINTS={'Touchdown','Field Goal','Interception (Pick-6)','Fumble (Defensive TD)','Punt (Return TD)','Blocked Punt (TD)','Blocked FG (TD)','Kickoff (Return TD)','Safety'}

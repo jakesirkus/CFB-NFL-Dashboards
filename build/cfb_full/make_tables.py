@@ -30,6 +30,9 @@ def final_text(t):
     return head
 if __name__=='__main__':
     raw=pd.read_pickle(sys.argv[1])
+    import json as _j, os as _o
+    if _o.path.exists('drop_plays.json'):             # hand-verified duplicate rows the feed logged twice
+        raw=raw[~raw.Id.astype(str).isin(set(_j.load(open('drop_plays.json'))))].copy()
     raw['PlayText']=raw.PlayText.map(final_text)
     # 'TOUCHDOWN nullified by penalty' is not a touchdown; keep the words out of every text test
     raw['PlayText']=raw.PlayText.str.replace(r'TOUCHDOWN nullified', 'SCORE NULLIFIED', case=False, regex=True)

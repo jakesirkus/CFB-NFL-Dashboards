@@ -1,7 +1,7 @@
 """Regenerate full box scores (every section except meta), quarter/half splits and game-log stat
 fields for already-published games, from the current tables. Used when a data fix (e.g. yardage)
 changes games in earlier weeks. Percentiles use the same pools as build_week.
-usage: regen_boxes.py OUT gid,gid,...   (Week 7 games are skipped: build_week rebuilds them)"""
+usage: regen_boxes.py OUT gid,gid,...   (any week)"""
 import sys, os, json, glob, pickle, contextlib, io, numpy as np, pandas as pd
 sys.path.insert(0, '.')
 from boxscore import game_boxes
@@ -33,7 +33,7 @@ def gamelog(gid, t):
 if __name__ == '__main__':
     T = '<script id="dashboard-data" type="application/json">'
     s = open(OUT + '/index.html').read(); a = s.index(T) + len(T); b = s.index('</script>', a); D = json.loads(s[a:b])
-    keys = {int(k.split('_')[1]): k for k in D['boxscores'] if k.split('_')[1] in GIDS and k.split('_')[0] != '7'}
+    keys = {int(k.split('_')[1]): k for k in D['boxscores'] if k.split('_')[1] in GIDS}
     with Pool(4) as p: NEW = dict(p.map(work, list(keys)))
     # percentile pools (same as build_week), with these games' new values in place of the old ones
     P = pickle.load(open('all_boxes3.pkl', 'rb'))['res']
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         d = json.load(open(f)); ch = False
         for gk in d:
             gid = int(gk.split('_')[1])
-            if gid in NEW and gk.split('_')[0] != '7':
+            if gid in NEW:
                 per = NEW[gid][1]; d[gk] = {s_: {t: fill(jl(per[s_][t]), s_) for t in per[s_]} for s_ in per}; ch = True; m += 1
         if ch: json.dump(d, open(f, 'w'), separators=(',', ':'), default=float)
     print('box scores regenerated', n, '| split sets', m)

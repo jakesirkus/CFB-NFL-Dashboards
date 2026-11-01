@@ -17,6 +17,16 @@ def prep(df):
     df['is_rp']=df.is_rush|df.is_pass                      # rush/pass plays (rates, SR, EPA)
     df['is_scrim']=df.is_rp|df.is_fumrow|df.is_penplay     # play count definition
     df['yds']=np.where(df.is_penplay,0,df.YardsGained.fillna(0))
+    # penalty-typed rows where the play still counts (penalty declined / enforced after the play, no 'NO PLAY'): the run/catch/sack
+    # yards count toward total yards like in the official stats (credited '(N)' when the text gives one). Nov 1 audit vs CFBD totals.
+    stands=df.is_penplay&t.str.contains(r'rush |pass |sacked|scramble',case=False)&~t.str.contains('SCORE NULLIFIED',case=False)
+    if stands.any():
+        import re as _re
+        from yardfix import text_yards
+        def _pty(x):
+            x=x.split('PENALTY')[0]; m=_re.search(r'(?:gain|loss) \((-?\d+)\)', x)
+            return int(m.group(1)) if m else text_yards(x)
+        df.loc[stands,'yds']=t[stands].map(_pty).fillna(0).astype(float)
     df['is_comp']=df.PlayType.isin(COMP)
     df['is_sack']=df.PlayType=='Sack'
     df['expl_rush']=df.is_rush&(df.YardsGained>=10)
