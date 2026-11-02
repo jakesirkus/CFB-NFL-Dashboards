@@ -540,6 +540,7 @@
       <div class="control"><label for="mtA">Team A</label><input id="mtA" list="mtTeams" placeholder="Start typing…" autocomplete="off"></div>
       <button class="mt-swap" id="mtSwap" type="button" title="Swap teams">⇄ Swap</button>
       <div class="control"><label for="mtB">Team B</label><input id="mtB" list="mtTeams" placeholder="Start typing…" autocomplete="off"></div>
+      <div class="control"><label for="mtSite">Site</label><select id="mtSite"><option value="a">Team A at home</option><option value="b">Team B at home</option><option value="n">Neutral site</option></select></div>
       <datalist id="mtTeams"></datalist>
     </div>
     <div class="scope-note" id="mtNote" style="max-width:none"></div>
@@ -915,6 +916,7 @@
     return '<div class="bs-section"><div class="bs-section-title">Situational</div>'+bsTable(heads, rows)+'</div>';
   }
 
+  function pcMMSS(s){ if(s==null||isNaN(s)||!s) return '\u2014'; s=Math.round(s); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
   function buildDrivesSection(a, b, heads){
     var d1=a.drives, d2=b.drives;
     var rows = bsRow('Total', bi(d1.total), bi(d2.total))
@@ -922,7 +924,9 @@
       + bsRow('Plays/Drive', bn(d1.playsPerDrive,2), bn(d2.playsPerDrive,2))
       + bsRow('Yards/Drive', bn(d1.yardsPerDrive,2), bn(d2.yardsPerDrive,2))
       + bsRow('EPA/Drive', bn(d1.epaPerDrive,2), bn(d2.epaPerDrive,2))
-      + bsRow('Available Yards %*', bp(d1.availYardsPct), bp(d2.availYardsPct));
+      + bsRow('Available Yards %*', bp(d1.availYardsPct), bp(d2.availYardsPct))
+      + bsRow('Time of Possession', pcMMSS(a.pace&&a.pace.topSec), pcMMSS(b.pace&&b.pace.topSec))
+      + bsRow('Sec/Play (tempo)*', a.pace&&a.pace.secPlay!=null?a.pace.secPlay.toFixed(1):'\u2014', b.pace&&b.pace.secPlay!=null?b.pace.secPlay.toFixed(1):'\u2014');
     return '<div class="bs-section"><div class="bs-section-title">Drives</div>'+bsTable(heads, rows)+'</div>';
   }
 
@@ -1353,6 +1357,7 @@
     tile(offTiles,'Pass yds / att', num(t.ypa,2), 'off');
     tile(offTiles,'Completion %', pct(t.compPct), 'off');
     tile(offTiles,'Rush + pass TD', (t.rushTD+t.passTD), 'off');
+    tile(offTiles,'Sec / play (adj)', t.secPlayAdj==null?'\u2014':t.secPlayAdj.toFixed(1)+(t.paceRanks&&t.paceRanks.secPlayAdj?' (#'+t.paceRanks.secPlayAdj+')':''), 'off');
 
     var defTiles = document.getElementById('defTiles'); defTiles.innerHTML='';
     tile(defTiles,'Total yards', t.totalYdsAllowed, 'def');
@@ -1361,6 +1366,7 @@
     tile(defTiles,'Pass yds / att', num(t.ypaAllowed,2), 'def');
     tile(defTiles,'TD allowed', (t.rushTDAllowed+t.passTDAllowed), 'def');
     tile(defTiles,'Explosive allowed', t.explosivePlaysAllowed, 'def');
+    tile(defTiles,'Pace faced (adj s/play)', t.secPlayFacedAdj==null?'\u2014':t.secPlayFacedAdj.toFixed(1), 'def');
 
     // rush/pass split bar
     var splitBar = document.getElementById('splitBar'); splitBar.innerHTML='';
@@ -1474,6 +1480,13 @@
     { key:'ppoDef', label:'Pts/Opp (Def)', type:'num', decimals:2, get:function(t){ return t.ppoAllowed; }, asc:true },
     { key:'offSched', label:'Off-Sched Run % (Off)', type:'pct1', get:function(t){ return t.offSchedPct; }, asc:true },
     { key:'offSchedD', label:'Off-Sched Run % (Def)', type:'pct1', get:function(t){ return t.offSchedPctAllowed; } },
+    { key:'paceAdj', label:'Sec/Play Adj (Off)', type:'num', decimals:1, get:function(t){ return t.secPlayAdj; }, asc:true },
+    { key:'paceNeu', label:'Neutral Sec/Play (Off)', type:'num', decimals:1, get:function(t){ return t.secPlayNeutral; }, asc:true },
+    { key:'paceFaced', label:'Pace Faced Adj (Def)', type:'num', decimals:1, get:function(t){ return t.secPlayFacedAdj; }, asc:true },
+    { key:'playsPG', label:'Plays/G', type:'num', decimals:1, get:function(t){ return t.playsPG; } },
+    { key:'drivesPG', label:'Drives/G', type:'num', decimals:1, get:function(t){ return t.drivesPG; } },
+    { key:'playsPerDrive', label:'Plays/Drive', type:'num', decimals:2, get:function(t){ return t.playsPerDrive; } },
+    { key:'topPG', label:'TOP/G (min)', type:'num', decimals:1, get:function(t){ return t.topPG==null?null:t.topPG/60; } },
     { key:'toMargin', label:'Turnover Margin', type:'signed0', get:function(t){ return t.turnoverMargin; } },
   ];
   var lbSort = { key:'epaOff', dir:-1 };
@@ -1731,12 +1744,46 @@
     var pa = 100*(1-(aRank-1)/(n-1)), pb = 100*(1-(bRank-1)/(n-1));
     return '<tr><td>'+label+'</td><td class="num">#'+aRank+'</td><td class="num">#'+bRank+'</td>'+mtEdge(pa, pb, aName, bName, aCls, bCls)+'</tr>';
   }
+  function mtProjection(a, b){            // projected score / total (DATA.meta.totals) + pace comparison
+    var M = DATA.meta && DATA.meta.totals; if(!M || !M.teams || !M.teams[a] || !M.teams[b]) return '';
+    var site = (document.getElementById('mtSite')||{}).value || 'a', ha = site==='a' ? 1 : (site==='b' ? -1 : 0);
+    var A = M.teams[a], B = M.teams[b], poss = M.muD + A[2] + B[2];
+    var pa = Math.max(0, poss/2*(M.mu + M.h*ha + A[0] + B[1])), pb = Math.max(0, poss/2*(M.mu - M.h*ha + B[0] + A[1]));
+    var fav = pa>=pb ? a : b, spr = Math.abs(pa-pb);
+    var siteTxt = ha===1 ? a+' at home' : (ha===-1 ? b+' at home' : 'neutral site');
+    var TA = teams[a] || {}, TB = teams[b] || {};
+    function f1(v){ return v==null||isNaN(v) ? '—' : Number(v).toFixed(1); }
+    function rk(t, k){ var r = t.paceRanks && t.paceRanks[k]; return r ? '<span class="pc">#'+r+'</span>' : ''; }
+    function row(lab, va, vb, tip){ return '<tr'+(tip?' title="'+tip+'"':'')+'><td>'+lab+'</td><td class="num">'+va+'</td><td class="num">'+vb+'</td></tr>'; }
+    var bt = M.backtest || {};
+    var h = '<div class="mt-card"><h3>Projected score &amp; pace</h3>'
+      + '<div class="mt-sub">Model ('+siteTxt+'): built from each team’s opponent-adjusted <b>deserved</b> points per drive (turnovers, return TDs and red-zone luck stripped out) times the projected number of possessions from both teams’ pace.'
+      + (bt.games ? ' Backtest (every game predicted only from earlier weeks, '+bt.games+' games): average miss on the total '+f1(bt.modelMaeSameGames!=null?bt.modelMaeSameGames:bt.mae)+' pts'+(bt.vegasMae!=null?' vs Vegas closing totals '+f1(bt.vegasMae)+' pts':'')+'.' : '')
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin:6px 0 10px">'
+      + '<div><span class="mt-a" style="font-size:22px;font-weight:700">'+f1(pa)+'</span> <span style="color:var(--ink-muted)">'+a+'</span></div>'
+      + '<div><span class="mt-b" style="font-size:22px;font-weight:700">'+f1(pb)+'</span> <span style="color:var(--ink-muted)">'+b+'</span></div>'
+      + '<div><b>Total '+f1(pa+pb)+'</b></div><div>'+(spr<0.05?'Even':fav+' by '+f1(spr))+'</div>'
+      + '<div style="color:var(--ink-muted)">'+f1(poss)+' possessions</div></div>'
+      + '<div class="mt-wrap"><table class="mt"><thead><tr><th>Pace</th><th>'+a+'</th><th>'+b+'</th></tr></thead><tbody>'
+      + row('Sec/play, situation-adjusted', f1(TA.secPlayAdj)+rk(TA,'secPlayAdj'), f1(TB.secPlayAdj)+rk(TB,'secPlayAdj'), 'Seconds between snaps with the clock running, adjusted for score, quarter, play type and opponent. Lower = faster (#1 = fastest).')
+      + row('Sec/play, neutral situations', f1(TA.secPlayNeutral), f1(TB.secPlayNeutral), 'Quarters 1-3, score within 7')
+      + row('Sec/play, raw', f1(TA.secPlay), f1(TB.secPlay))
+      + row('Pace faced on defense (adj.)', f1(TA.secPlayFacedAdj)+rk(TA,'secPlayFacedAdj'), f1(TB.secPlayFacedAdj)+rk(TB,'secPlayFacedAdj'), 'Tempo opponents ran against this defense')
+      + row('Plays / game', f1(TA.playsPG)+rk(TA,'playsPG'), f1(TB.playsPG)+rk(TB,'playsPG'))
+      + row('Drives / game', f1(TA.drivesPG)+rk(TA,'drivesPG'), f1(TB.drivesPG)+rk(TB,'drivesPG'))
+      + row('Plays / drive', TA.playsPerDrive==null?'—':TA.playsPerDrive.toFixed(2), TB.playsPerDrive==null?'—':TB.playsPerDrive.toFixed(2))
+      + row('Time of possession / game', pcMMSS(TA.topPG), pcMMSS(TB.topPG))
+      + row('Plays allowed / game', f1(TA.playsAllowedPG), f1(TB.playsAllowedPG))
+      + '</tbody></table></div></div>';
+    return h;
+  }
   function renderMatchup(){
     var a = mtA.value, b = mtB.value, out = document.getElementById('mtOut');
     if(!teams[a] || !teams[b] || a===b){ out.innerHTML = '<div class="mt-card">Pick two different teams.</div>'; return; }
     var A = teams[a], B = teams[b], n = teamKeys.length, R = DATA.teamsAdj;
     document.getElementById('mtNote').textContent = (adjModeLabel()) + ' Percentiles: higher = better for that unit (offense or defense). Edge = gap in percentile points; 20+ = edge, 40+ = big edge.';
-    var html = '';
+    var html = mtProjection(a, b);
     if(R && R[a] && R[b] && R[a].adjRank && R[b].adjRank){
       var ra = R[a].adjRank, rb = R[b].adjRank;
       html += '<div class="mt-card"><h3>Unit vs unit (opponent-adjusted ranks)</h3><div class="mt-sub">Lower rank = better. Schedule: '+a+' #'+(R[a].sos?R[a].sos.rank:'?')+', '+b+' #'+(R[b].sos?R[b].sos.rank:'?')+' (1 = hardest).</div>'
@@ -1764,7 +1811,7 @@
     out.innerHTML = html;
   }
   function adjModeLabel(){ return (typeof adjMode!=='undefined' && adjMode) ? 'Stats: opponent-adjusted.' : 'Stats: raw (switch to Opponent-adjusted at the top for schedule-adjusted numbers).'; }
-  mtA.addEventListener('change', renderMatchup); mtB.addEventListener('change', renderMatchup);
+  mtA.addEventListener('change', renderMatchup); document.getElementById('mtSite').addEventListener('change', renderMatchup); mtB.addEventListener('change', renderMatchup);
   mtA.addEventListener('input', function(){ if(teams[mtA.value]) renderMatchup(); });
   mtB.addEventListener('input', function(){ if(teams[mtB.value]) renderMatchup(); });
   document.getElementById('mtSwap').addEventListener('click', function(){ var t=mtA.value; mtA.value=mtB.value; mtB.value=t; renderMatchup(); });

@@ -123,6 +123,13 @@ split as explosiveness.bigPlays [{q,c,y,k,td,t}] (asserts the 10+/15+ subsets re
 20+/30+/40+ rows (40+ split pass/rush) with hover/tap lists in the Explosiveness section. Test: `node verify_bigplays.js PAGE "Team"`.
 Yardage: plays whose text credits 'gain (0)' (holding behind the run) but the feed has a big number go in yard_overrides.json (4 added Nov 1).
 
+## Pace + totals model (CFB only, Nov 2 - user said NOT for NFL)
+pace_lib.py (running-clock snap-to-snap tempo, situation-adjusted regression), add_pace.py (box/split pace + season fields, before opp_adjust),
+totals_model.py (ridge: game possessions = pace_A + pace_B; expected points/drive = off_A + def_B + home; w=0 = deserved points chosen by
+walk-forward backtest; `python3 -I totals_model.py cfb` re-runs it), add_totals.py (DATA.meta.totals; CFB home edge from FBS-vs-FBS games),
+patch_pace_ui.py (box rows, team tiles, leaderboard columns, Matchup 'Projected score & pace' card + Site picker). Vegas totals for the backtest:
+/home/claude/data/cfbd/lines_wN.json (CFBD /lines). Test: node verify_pace.js PAGE A B TEAM.
+
 ## Publish to GitHub
 `python3 -I make_github_pack.py cfb_full/<out> nfl_full/<nfl_vNN.html> <repo checkout>` writes `index.html`, `nfl/index.html`,
 `cfb/index.html` and the CFB shards merged into ~20+20 packs (`cfb/periods/pack_XX.json`, `cfb/drivecharts/pack_XX.json`).
