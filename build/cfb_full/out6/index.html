@@ -1748,7 +1748,7 @@
     var M = DATA.meta && DATA.meta.totals; if(!M || !M.teams || !M.teams[a] || !M.teams[b]) return '';
     var site = (document.getElementById('mtSite')||{}).value || 'a', ha = site==='a' ? 1 : (site==='b' ? -1 : 0);
     var A = M.teams[a], B = M.teams[b], poss = M.muD + A[2] + B[2];
-    var kc = (M.calib||0)/2, pa = Math.max(0, poss/2*(M.mu + M.h*ha + A[0] + B[1]) - kc), pb = Math.max(0, poss/2*(M.mu - M.h*ha + B[0] + A[1]) - kc);
+    var kc = (M.calib||0)/2, bO = M.bO||0, bD = M.bD||0, rA = A[3]||0, rB = B[3]||0, pa = Math.max(0, poss/2*(M.mu + M.h*ha + bO*rA + bD*rB + A[0] + B[1]) - kc), pb = Math.max(0, poss/2*(M.mu - M.h*ha + bO*rB + bD*rA + B[0] + A[1]) - kc);
     var fav = pa>=pb ? a : b, spr = Math.abs(pa-pb);
     var siteTxt = ha===1 ? a+' at home' : (ha===-1 ? b+' at home' : 'neutral site');
     var TA = teams[a] || {}, TB = teams[b] || {};
@@ -1757,7 +1757,7 @@
     function row(lab, va, vb, tip){ return '<tr'+(tip?' title="'+tip+'"':'')+'><td>'+lab+'</td><td class="num">'+va+'</td><td class="num">'+vb+'</td></tr>'; }
     var bt = M.backtest || {};
     var h = '<div class="mt-card"><h3>Projected score &amp; pace</h3>'
-      + '<div class="mt-sub">Model ('+siteTxt+'): built from each team’s opponent-adjusted <b>deserved</b> points per drive (turnovers, return TDs and red-zone luck stripped out) times the projected number of possessions from both teams’ pace.'
+      + '<div class="mt-sub">Model ('+siteTxt+'): your power ratings set each team’s overall strength, its <b>deserved</b> points per drive (turnovers, return TDs and red-zone luck stripped out) split that into offense vs defense, times the projected possessions from both teams’ pace.'
       + (bt.games ? ' Backtest (every game predicted only from earlier weeks, '+bt.games+' games): average miss on the total '+f1(bt.modelMaeSameGames!=null?bt.modelMaeSameGames:bt.mae)+' pts'+(bt.vegasMae!=null?' vs Vegas closing totals '+f1(bt.vegasMae)+' pts':'')+'.' : '')
       + '</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin:6px 0 10px">'

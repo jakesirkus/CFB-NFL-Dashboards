@@ -75,11 +75,33 @@ def fit(games, w, lam_o=4.0, lam_p=4.0, fbs=None, fcs_w=1.0):
     return dict(teams=T, mu=float(b[0]), h=float(b[1]), fcsOff=float(b[2]), fcsDef=float(b[3]), off={t: float(b[4 + ix[t]]) for t in T},
                 dfn={t: float(b[4 + N + ix[t]]) for t in T}, muD=float(c[0]), fcsPace=float(c[1]), pace={t: float(c[2 + ix[t]]) for t in T}, w=w, calib=0.0)
 
-def project(P, home, away, neutral=False):
+def fit_rated(games, w, lam_o, lam_p, fbs, fcs_w, rfun):
+    """Same as fit(), plus the user's power ratings as an anchor (Nov 2): points/drive = mu + h + bO*R_off + bD*R_def + FCS terms
+    + shrunk offense/defense residuals.  rfun(team, game) -> centered rating (None for teams without one). Strength comes mostly from
+    the ratings (which carry the schedule), the residuals split it into offense vs defense for the total."""
+    P = fit(games, w, lam_o, lam_p, fbs=fbs, fcs_w=fcs_w)                 # pace + FCS pace terms
+    T = sorted({g['home'] for g in games} | {g['away'] for g in games}); ix = {t: i for i, t in enumerate(T)}; N = len(T)
+    X, y, wt = [], [], []
+    for g in games:
+        for o, d_, pts, x, dr, hm in ((g['home'], g['away'], g['ph'], g['xh'], g['dh'], 1), (g['away'], g['home'], g['pa'], g['xa'], g['da'], -1)):
+            if not dr or x is None: continue
+            ro, rd = rfun(o, g), rfun(d_, g)
+            row = np.zeros(6 + 2 * N); row[0] = 1; row[1] = 0 if g['neutral'] else hm; row[2] = o not in fbs; row[3] = d_ not in fbs
+            row[4] = ro or 0.0; row[5] = rd or 0.0; row[6 + ix[o]] = 1; row[6 + N + ix[d_]] = 1
+            X.append(row); y.append(w * pts / dr + (1 - w) * x / dr); wt.append(dr * (fcs_w if (o not in fbs or d_ not in fbs) else 1.0))
+    X, y, wt = np.array(X), np.array(y), np.array(wt, float); sw = np.sqrt(wt)
+    pen = np.r_[0, 0, 0, 0, 0, 0, np.full(2 * N, lam_o)]
+    b = np.linalg.lstsq(np.vstack([X * sw[:, None], np.diag(np.sqrt(pen))]), np.r_[y * sw, np.zeros(len(pen))], rcond=None)[0]
+    P.update(mu=float(b[0]), h=float(b[1]), fcsOff=float(b[2]), fcsDef=float(b[3]), bO=float(b[4]), bD=float(b[5]),
+             off={t: float(b[6 + ix[t]]) for t in T}, dfn={t: float(b[6 + N + ix[t]]) for t in T})
+    return P
+
+def project(P, home, away, neutral=False, rh=0.0, ra=0.0):
     hm = 0 if neutral else 1
     D = P['muD'] + P['pace'].get(home, 0) + P['pace'].get(away, 0)
-    ph = P['mu'] + P['h'] * hm + P['off'].get(home, 0) + P['dfn'].get(away, 0)
-    pa = P['mu'] - P['h'] * hm + P['off'].get(away, 0) + P['dfn'].get(home, 0)
+    bO, bD = P.get('bO', 0.0), P.get('bD', 0.0)              # rating anchor (fit_rated); rh/ra = centered ratings
+    ph = P['mu'] + P['h'] * hm + bO * rh + bD * ra + P['off'].get(home, 0) + P['dfn'].get(away, 0)
+    pa = P['mu'] - P['h'] * hm + bO * ra + bD * rh + P['off'].get(away, 0) + P['dfn'].get(home, 0)
     k = P.get('calib', 0.0) / 2                              # backtest bias correction, split between the two teams
     return D / 2 * ph - k, D / 2 * pa - k, D
 
