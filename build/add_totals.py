@@ -8,19 +8,23 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import totals_model as TM
 LG, SRC, DST = sys.argv[1:4]
 CFG = {'cfb': dict(w=0.0, lam=(32, 16)), 'nfl': dict(w=0.0, lam=(32, 64))}[LG]
+FW = 0.05 if LG == 'cfb' else 1.0   # user (Nov 2): games vs FCS should barely move the ratings -> 5% weight
 s = open(SRC).read(); a = s.index(TM.TAG) + len(TM.TAG); b = s.index('</script>', a); D = json.loads(s[a:b])
 G, teams = TM.load(LG, D)
 FBS = set(teams) if LG == 'cfb' else None
-P = TM.fit(G, CFG['w'], *CFG['lam'], fbs=FBS)
+P = TM.fit(G, CFG['w'], *CFG['lam'], fbs=FBS, fcs_w=FW)
 # CFB home edge from FBS-vs-FBS games only (cupcake home games vs FCS inflate it: 0.33 vs 0.20 pts/drive on Nov 2; the backtest
 # margin error is lowest near the FBS-only value)
-if LG == 'cfb': P['h'] = TM.fit([g for g in G if g['fbs']], CFG['w'], *CFG['lam'], fbs=FBS)['h']
+if LG == 'cfb': P['h'] = TM.fit([g for g in G if g['fbs']], CFG['w'], *CFG['lam'], fbs=FBS, fcs_w=FW)['h']
+if LG == 'cfb':                          # FCS = the worst possible opponent: FCS defense at least as bad as the worst FBS defense,
+    P['fcsDef'] = max(P['fcsDef'], max(P['dfn'][t] for t in FBS if t in P['dfn']))   # FCS offense at least as bad as the worst FBS offense
+    P['fcsOff'] = min(P['fcsOff'], min(P['off'][t] for t in FBS if t in P['off']))
 # walk-forward backtest with the same settings (each week predicted from earlier weeks only)
 out = []
 for wk in sorted({g['week'] for g in G}):
     if wk < 4: continue
-    Pw = TM.fit([g for g in G if g['week'] < wk], CFG['w'], *CFG['lam'], fbs=FBS)
-    if LG == 'cfb': Pw['h'] = TM.fit([g for g in G if g['week'] < wk and g['fbs']], CFG['w'], *CFG['lam'], fbs=FBS)['h']
+    Pw = TM.fit([g for g in G if g['week'] < wk], CFG['w'], *CFG['lam'], fbs=FBS, fcs_w=FW)
+    if LG == 'cfb': Pw['h'] = TM.fit([g for g in G if g['week'] < wk and g['fbs']], CFG['w'], *CFG['lam'], fbs=FBS, fcs_w=FW)['h']
     # bias correction known at that time: average (model - actual) over the earlier backtest weeks
     Pw['calib'] = float(np.mean([r - x for _, x, _, r in out])) if out else 0.0
     for g in G:
@@ -35,7 +39,7 @@ bt = {'games': int(len(o)), 'mae': round(float(np.mean(np.abs(o[:, 0] - o[:, 1])
       'modelMaeSameGames': round(float(np.mean(np.abs(o[vv, 0] - o[vv, 1]))), 2) if vv.any() else None,
       'bias': round(float(np.mean(o[:, 0] - o[:, 1])), 2) if len(o) else None, 'vegasBias': round(float(np.mean(o[vv, 2] - o[vv, 1])), 2) if vv.any() else None}
 keep = [t for t in teams if t in P['off']]
-D['meta']['totals'] = {'mu': round(P['mu'], 4), 'h': round(P['h'], 4), 'muD': round(P['muD'], 3), 'w': CFG['w'], 'calib': round(P['calib'], 3),
+D['meta']['totals'] = {'mu': round(P['mu'], 4), 'h': round(P['h'], 4), 'muD': round(P['muD'], 3), 'w': CFG['w'], 'calib': round(P['calib'], 3), 'fcsWeight': FW, 'fcsOff': round(P.get('fcsOff', 0), 3), 'fcsDef': round(P.get('fcsDef', 0), 3),
                        'teams': {t: [round(P['off'][t], 4), round(P['dfn'][t], 4), round(P['pace'][t], 3)] for t in keep},
                        'backtest': bt,
                        'note': 'Projected score = (projected possessions / 2) x opponent-adjusted expected points per drive (box-score deserved score, '

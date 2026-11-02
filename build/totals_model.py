@@ -44,7 +44,7 @@ def load(lg, D=None):
                       fbs=(h in D['teams'] and a in D['teams'])))
     return G, sorted(D['teams'])
 
-def fit(games, w, lam_o=4.0, lam_p=4.0, fbs=None):
+def fit(games, w, lam_o=4.0, lam_p=4.0, fbs=None, fcs_w=1.0):
     """fbs: set of FBS teams (CFB) -> unpenalized 'offense is FCS' / 'defense is FCS' / FCS-in-game pace terms, so FCS
     opponents don't look average and inflate FBS ratings (Nov 2 fix)"""
     F = fbs is not None
@@ -57,21 +57,21 @@ def fit(games, w, lam_o=4.0, lam_p=4.0, fbs=None):
             row = np.zeros(4 + 2 * N); row[0] = 1; row[1] = 0 if g['neutral'] else hm
             if F: row[2] = o not in fbs; row[3] = d_ not in fbs
             row[4 + ix[o]] = 1; row[4 + N + ix[d_]] = 1
-            X.append(row); y.append(w * pts / dr + (1 - w) * x / dr); wt.append(dr)
+            X.append(row); y.append(w * pts / dr + (1 - w) * x / dr); wt.append(dr * (fcs_w if F and (o not in fbs or d_ not in fbs) else 1.0))
     X, y, wt = np.array(X), np.array(y), np.array(wt, float); sw = np.sqrt(wt)
     pen = np.r_[0, 0, (0 if F else 1e6), (0 if F else 1e6), np.full(2 * N, lam_o)]
     b = np.linalg.lstsq(np.vstack([X * sw[:, None], np.diag(np.sqrt(pen))]), np.r_[y * sw, np.zeros(len(pen))], rcond=None)[0]
     # possessions per game (both teams)
-    Xd, yd = [], []
+    Xd, yd, wd = [], [], []
     for g in games:
         if not (g['dh'] and g['da']): continue
         row = np.zeros(2 + N); row[0] = 1
         if F: row[1] = (g['home'] not in fbs) + (g['away'] not in fbs)
         row[2 + ix[g['home']]] += 1; row[2 + ix[g['away']]] += 1
-        Xd.append(row); yd.append(g['dh'] + g['da'])
-    Xd, yd = np.array(Xd), np.array(yd, float)
+        Xd.append(row); yd.append(g['dh'] + g['da']); wd.append(fcs_w if F and (g['home'] not in fbs or g['away'] not in fbs) else 1.0)
+    Xd, yd, wd = np.array(Xd), np.array(yd, float), np.sqrt(np.array(wd))
     pd_ = np.r_[0, (0 if F else 1e6), np.full(N, lam_p)]
-    c = np.linalg.lstsq(np.vstack([Xd, np.diag(np.sqrt(pd_))]), np.r_[yd, np.zeros(len(pd_))], rcond=None)[0]
+    c = np.linalg.lstsq(np.vstack([Xd * wd[:, None], np.diag(np.sqrt(pd_))]), np.r_[yd * wd, np.zeros(len(pd_))], rcond=None)[0]
     return dict(teams=T, mu=float(b[0]), h=float(b[1]), fcsOff=float(b[2]), fcsDef=float(b[3]), off={t: float(b[4 + ix[t]]) for t in T},
                 dfn={t: float(b[4 + N + ix[t]]) for t in T}, muD=float(c[0]), fcsPace=float(c[1]), pace={t: float(c[2 + ix[t]]) for t in T}, w=w, calib=0.0)
 
