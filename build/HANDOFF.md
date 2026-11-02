@@ -126,7 +126,7 @@ Yardage: plays whose text credits 'gain (0)' (holding behind the run) but the fe
 ## Pace + totals model (CFB only, Nov 2 - user said NOT for NFL)
 pace_lib.py (running-clock snap-to-snap tempo, situation-adjusted regression), add_pace.py (box/split pace + season fields, before opp_adjust),
 totals_model.py (ridge: game possessions = pace_A + pace_B; expected points/drive = off_A + def_B + home; w=0 = deserved points chosen by
-walk-forward backtest; `python3 -I totals_model.py cfb` re-runs it), add_totals.py (DATA.meta.totals; CFB home edge from FBS-vs-FBS games),
+walk-forward backtest; `python3 -I totals_model.py cfb` re-runs it; FCS-opponent terms + walk-forward bias correction `calib`, Nov 2), add_totals.py (DATA.meta.totals; CFB home edge from FBS-vs-FBS games),
 patch_pace_ui.py (box rows, team tiles, leaderboard columns, Matchup 'Projected score & pace' card + Site picker). Vegas totals for the backtest:
 /home/claude/data/cfbd/lines_wN.json (CFBD /lines). Test: node verify_pace.js PAGE A B TEAM.
 

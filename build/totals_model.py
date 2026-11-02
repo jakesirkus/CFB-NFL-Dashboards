@@ -44,36 +44,44 @@ def load(lg, D=None):
                       fbs=(h in D['teams'] and a in D['teams'])))
     return G, sorted(D['teams'])
 
-def fit(games, w, lam_o=4.0, lam_p=4.0):
+def fit(games, w, lam_o=4.0, lam_p=4.0, fbs=None):
+    """fbs: set of FBS teams (CFB) -> unpenalized 'offense is FCS' / 'defense is FCS' / FCS-in-game pace terms, so FCS
+    opponents don't look average and inflate FBS ratings (Nov 2 fix)"""
+    F = fbs is not None
     T = sorted({g['home'] for g in games} | {g['away'] for g in games}); ix = {t: i for i, t in enumerate(T)}; N = len(T)
     # points per drive rows (one per team-game on offense)
     X, y, wt = [], [], []
     for g in games:
         for o, d_, pts, x, dr, hm in ((g['home'], g['away'], g['ph'], g['xh'], g['dh'], 1), (g['away'], g['home'], g['pa'], g['xa'], g['da'], -1)):
             if not dr or x is None: continue
-            row = np.zeros(2 + 2 * N); row[0] = 1; row[1] = 0 if g['neutral'] else hm; row[2 + ix[o]] = 1; row[2 + N + ix[d_]] = 1
+            row = np.zeros(4 + 2 * N); row[0] = 1; row[1] = 0 if g['neutral'] else hm
+            if F: row[2] = o not in fbs; row[3] = d_ not in fbs
+            row[4 + ix[o]] = 1; row[4 + N + ix[d_]] = 1
             X.append(row); y.append(w * pts / dr + (1 - w) * x / dr); wt.append(dr)
     X, y, wt = np.array(X), np.array(y), np.array(wt, float); sw = np.sqrt(wt)
-    pen = np.r_[0, 0, np.full(2 * N, lam_o)]
+    pen = np.r_[0, 0, (0 if F else 1e6), (0 if F else 1e6), np.full(2 * N, lam_o)]
     b = np.linalg.lstsq(np.vstack([X * sw[:, None], np.diag(np.sqrt(pen))]), np.r_[y * sw, np.zeros(len(pen))], rcond=None)[0]
     # possessions per game (both teams)
     Xd, yd = [], []
     for g in games:
         if not (g['dh'] and g['da']): continue
-        row = np.zeros(1 + N); row[0] = 1; row[1 + ix[g['home']]] += 1; row[1 + ix[g['away']]] += 1
+        row = np.zeros(2 + N); row[0] = 1
+        if F: row[1] = (g['home'] not in fbs) + (g['away'] not in fbs)
+        row[2 + ix[g['home']]] += 1; row[2 + ix[g['away']]] += 1
         Xd.append(row); yd.append(g['dh'] + g['da'])
     Xd, yd = np.array(Xd), np.array(yd, float)
-    pd_ = np.r_[0, np.full(N, lam_p)]
+    pd_ = np.r_[0, (0 if F else 1e6), np.full(N, lam_p)]
     c = np.linalg.lstsq(np.vstack([Xd, np.diag(np.sqrt(pd_))]), np.r_[yd, np.zeros(len(pd_))], rcond=None)[0]
-    return dict(teams=T, mu=float(b[0]), h=float(b[1]), off={t: float(b[2 + ix[t]]) for t in T}, dfn={t: float(b[2 + N + ix[t]]) for t in T},
-                muD=float(c[0]), pace={t: float(c[1 + ix[t]]) for t in T}, w=w)
+    return dict(teams=T, mu=float(b[0]), h=float(b[1]), fcsOff=float(b[2]), fcsDef=float(b[3]), off={t: float(b[4 + ix[t]]) for t in T},
+                dfn={t: float(b[4 + N + ix[t]]) for t in T}, muD=float(c[0]), fcsPace=float(c[1]), pace={t: float(c[2 + ix[t]]) for t in T}, w=w, calib=0.0)
 
 def project(P, home, away, neutral=False):
     hm = 0 if neutral else 1
     D = P['muD'] + P['pace'].get(home, 0) + P['pace'].get(away, 0)
     ph = P['mu'] + P['h'] * hm + P['off'].get(home, 0) + P['dfn'].get(away, 0)
     pa = P['mu'] - P['h'] * hm + P['off'].get(away, 0) + P['dfn'].get(home, 0)
-    return D / 2 * ph, D / 2 * pa, D
+    k = P.get('calib', 0.0) / 2                              # backtest bias correction, split between the two teams
+    return D / 2 * ph - k, D / 2 * pa - k, D
 
 def backtest(lg, ws=(0, 0.25, 0.5, 0.75, 1.0), lams=((2, 2), (4, 4), (8, 4), (16, 8)), start=4, quiet=False):
     G, fbsT = load(lg)
@@ -86,7 +94,7 @@ def backtest(lg, ws=(0, 0.25, 0.5, 0.75, 1.0), lams=((2, 2), (4, 4), (8, 4), (16
                 if wk < start: continue
                 tr = [g for g in G if g['week'] < wk]; te = [g for g in G if g['week'] == wk and (g['fbs'] or lg == 'nfl')]
                 if not te: continue
-                P = fit(tr, w, *lam)
+                P = fit(tr, w, *lam, fbs=set(fbsT) if lg == 'cfb' else None)
                 for g in te:
                     if g['home'] not in P['off'] or g['away'] not in P['off']: continue
                     h, a, _ = project(P, g['home'], g['away'], g['neutral'])

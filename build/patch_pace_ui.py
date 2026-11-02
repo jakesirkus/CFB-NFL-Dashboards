@@ -32,7 +32,7 @@ MT_FN = r"""  function mtProjection(a, b){            // projected score / total
     var M = DATA.meta && DATA.meta.totals; if(!M || !M.teams || !M.teams[a] || !M.teams[b]) return '';
     var site = (document.getElementById('mtSite')||{}).value || 'a', ha = site==='a' ? 1 : (site==='b' ? -1 : 0);
     var A = M.teams[a], B = M.teams[b], poss = M.muD + A[2] + B[2];
-    var pa = Math.max(0, poss/2*(M.mu + M.h*ha + A[0] + B[1])), pb = Math.max(0, poss/2*(M.mu - M.h*ha + B[0] + A[1]));
+    var kc = (M.calib||0)/2, pa = Math.max(0, poss/2*(M.mu + M.h*ha + A[0] + B[1]) - kc), pb = Math.max(0, poss/2*(M.mu - M.h*ha + B[0] + A[1]) - kc);
     var fav = pa>=pb ? a : b, spr = Math.abs(pa-pb);
     var siteTxt = ha===1 ? a+' at home' : (ha===-1 ? b+' at home' : 'neutral site');
     var TA = teams[a] || {}, TB = teams[b] || {};
