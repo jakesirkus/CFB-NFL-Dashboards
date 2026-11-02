@@ -1,5 +1,5 @@
 """Box-score expected score (xPts) and deserved win % (xWin) for every game on a dashboard page.
-Model = build/xpts_model.json (fixed coefficients, fitted Oct 25 2026 on Weeks 1-7; see its _doc).
+Model = build/xpts_model.json (fixed coefficients, refitted Nov 2 2026 without a turnover term; see its _doc).
 Writes boxscores[gk][team].meta.xPts/xWin, games[team][i].xPts/xPtsAllowed/xWin, and meta.xptsModel.
 
 usage: add_xpts.py cfb|nfl IN.html OUT.html [--recompute gk,gk,...] [--all] [--prev PREV.html]
@@ -24,7 +24,7 @@ def inputs(b):
 def xpts(b):
     d, av, sr, ex, ints, fum = inputs(b)
     raw = (C['intercept'] + C['drives'] * d + C['drivesXavail'] * d * av / 100 + C['drivesXsuccess'] * d * sr / 100
-           + C.get('drivesXexpl', 0) * d * ex / 100 + C['expGiveaways'] * (ints + 0.5 * fum))
+           + C.get('drivesXexpl', 0) * d * ex / 100 + C.get('expGiveaways', 0) * (ints + 0.5 * fum))
     return round(max(0.0, raw), 1)
 def xwin(a, b): return float(round(100 / (1 + math.exp(-M['winSlope'] * (a - b)))))
 

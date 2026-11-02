@@ -20,6 +20,7 @@ python3 -I ../add_ppo.py out7/index.html out7/index.html | tail -1
 python3 -I ../add_early_sr.py cfb out7
 python3 -I ../add_offsched.py cfb out7 prepped_to.pkl
 python3 -I ../add_bigplays.py cfb out7 prepped_to.pkl     # box-score big plays 20+/30+/40+ with hover lists (Nov 1)
-python3 -I ../add_xpts.py cfb out7/index.html out7/index.html --recompute $(cat w9_regen_keys.txt)   # new games + the regenerated boxes
+python3 -I ../add_xpts.py cfb out7/index.html out7/index.html --all   # every game (model refitted without turnovers, Nov 2)
+python3 -I ../patch_xpts_text.py cfb out7/index.html
 python3 -I ../add_line_stats.py cfb out7/index.html out7/index.html
 python3 -I ../opp_adjust.py cfb out7/index.html out7/index.html --blend 0.25

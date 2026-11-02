@@ -60,6 +60,8 @@ already-published game's final after adding it to official_finals.json (refuses 
    `node ../verify_nfl5.js nfl_vNN.html`, and confirm earlier weeks' drive charts are unchanged vs the previous build.
 
 ## Box-score expected score (xPts / deserved win %)
+**Nov 2: refitted WITHOUT a turnover term (user: turnovers are variance, don't penalize offenses).** Old coefficients kept in
+xpts_model.json `_previous_oct25`. CFB rebuild runs add_xpts --all; patch_xpts_text.py updates the tooltip wording.
 Model: `xpts_model.json` (fixed coefficients fitted Oct 25 on Weeks 1-7; formula in its `_doc`). `add_xpts.py cfb|nfl IN OUT`
 fills games that have none (plus `--recompute gk,...` for games whose box was regenerated). NFL: assemble_nfl.py runs it with
 `--all`; set `PREV=<previous nfl_vNN.html>` so unchanged games keep their values. CFB: last step of `rebuild_wN.sh`.
