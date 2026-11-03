@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-7 + 12 of 14 Week 8 games** (nfl_v37.html).
+State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v38.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 

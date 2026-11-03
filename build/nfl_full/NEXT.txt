@@ -1,6 +1,6 @@
-Published NFL v37 = nfl_v37.html (Weeks 1-7 complete + 12 of 14 Week 8 games; Nov 1, 2026: PHI-WAS (SNF) and CHI-SEA (MNF) still to add).
+Published NFL v38 = nfl_v38.html (Weeks 1-8 complete, Nov 3, 2026).
 Template = live_v24.html (assemble_nfl.py applies all UI patches: toggle, rankings, schedule, matchup, lines, early-down SR, off-schedule, big plays).
 Update: curl nflverse play_by_play_2026.csv.gz -> read_csv -> to_pickle /home/claude/data/pbp_newN.pkl ; python3 -I ../pff_fetch.py nfl 2026 <week>
-PREV=nfl_v37.html FULLWEEK=14 python3 -I assemble_nfl.py PBP.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7 8
+PREV=nfl_v38.html FULLWEEK=14 python3 -I assemble_nfl.py PBP.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7 8
 Checks: check_nfl_scores.py out.json pbp.pkl ; check_nfl_charts.py out.json ; node ../verify_nfl5.js out.html
 Compare earlier weeks' drive charts vs the previous build (extract the dashboard-data block).
