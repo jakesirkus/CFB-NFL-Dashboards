@@ -137,6 +137,14 @@ Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nf
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
+### Redesign (`/new/`, Nov 3 2026) — run on EVERY publish after copying the pages into the repo
+The dark broadcast redesign + Scoreboard tab (games by week -> full box score) lives at `new/` beside the original site until
+the user approves switching. It is a presentation-only patch over the finished pages (stats/logic unchanged):
+`python3 -I build/patch_redesign.py nfl nfl/index.html new/nfl/index.html`
+`python3 -I build/patch_redesign.py cfb cfb/index.html new/cfb/index.html ../../cfb/`   (CFB shards are read from the live /cfb/ folder)
+Team colors/abbreviations: build/redesign_colors.json (CFBD /teams colors + NFL list). `new/index.html` = dark landing page.
+Run the jsdom tests against `new/*/index.html` too. To switch over later: point the root links at new/ (or copy new/* up), keep the old pages for rollback.
+
 ## Conventions / lessons (don't regress these)
 - Reviewed plays: only the final ruling counts (text before "The previous play is under review…").
 - "TOUCHDOWN nullified by penalty" is not a TD. Own fumble recovered in the end zone = offense TD, not a turnover.
