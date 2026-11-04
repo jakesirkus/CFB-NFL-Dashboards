@@ -43,7 +43,7 @@ def one_game(g):
             continue
         drs = [d for d in chart if d['team'] == NAME.get(T, T) and (d.get('plays') or 0) > 0 and d.get('spot1') is not None]
         av = V(b['drives']['availYardsPct']) or 0
-        r = dict(season=int(g.season.iloc[0]), week=int(g.week.iloc[0]), gk=g.game_id.iloc[0], t=T, o=O, home=T == home, pts=float(pts), opts=float(opts),
+        r = dict(drv=[(d['spot1'], d['yards'], d['result']) for d in drs], season=int(g.season.iloc[0]), week=int(g.week.iloc[0]), gk=g.game_id.iloc[0], t=T, o=O, home=T == home, pts=float(pts), opts=float(opts),
                  dr=V(b['drives']['total']) or 0, av=av, avnoto=avail_noto(drs, av), sr=V(b['overall']['successRate']) or 0,
                  ex=V(b['overall']['explosiveRate']) or 0, ypp=V(b['production']['ypp']) or 0, epa=V(b['production']['epaPlay']) or 0,
                  spread=float(g.spread_line.iloc[0]) if 'spread_line' in g and pd.notna(g.spread_line.iloc[0]) else np.nan)
