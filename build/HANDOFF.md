@@ -137,6 +137,11 @@ Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nf
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
+### NEXT (user asked to do this Nov 4): early-down vs late-down success rate in the deserved score
+Split success rate into early-down (1st/2nd) and late-down (3rd/4th) terms with separate weights; test on the 10 NFL seasons
+(add early/late success + garbage shifts to nfl_hist_features.py, rerun ~35 min, extend nfl_xpts_grid.py) and on CFB 2026; adopt only if
+forward prediction improves; same structure for both leagues. Also pending: CFB Week 10 update (Ohio-Akron was Tue Nov 3).
+
 ### Deserved score VERSION 3 — the user's "option 4" (Nov 3 2026, CURRENT; supersedes the two notes below)
 User's philosophy: down-to-down success is the core; reward explosives but treat long TDs as partly variance; turnovers are variance
 (neutral: no penalty, no bonus). Implementation: xpts_v3.py + add_xpts.py (rewritten) + xpts_model.json version 3:
