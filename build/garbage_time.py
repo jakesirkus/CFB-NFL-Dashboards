@@ -52,15 +52,21 @@ def plays(lg, D):
     return p
 
 def corrections(lg, D, variant):
-    spec = VARIANTS[lg][variant]
+    return corrections_spec(lg, D, VARIANTS[lg][variant])
+
+def corrections_spec(lg, D, spec, shrink=(0, 0)):
+    """shrink = (plays, drives): the competitive-only rates are blended toward the full-game rates with this many plays /
+    drives of weight, so a team with few competitive snaps (blowout from the start) isn't extrapolated from 3 drives."""
     if spec is None: return {}
+    kp, kd = shrink
     p = plays(lg, D).copy()
     p['w'] = _w_cfb(p.margin.values, p.q.values, *spec) if lg == 'cfb' else _w_nfl(p.wpx.values, *spec)
     out = {}
     for (gk, t), g in p.groupby(['gk', 'team']):
         if not len(g) or g.w.sum() < 5: out[(gk, t)] = (0.0, 0.0, 0.0); continue
-        ds = 100 * (np.average(g.s, weights=g.w) - g.s.mean())
-        de = 100 * (np.average(g.e, weights=g.w) - g.e.mean())
+        W = g.w.sum(); sh = W / (W + kp) if kp else 1.0
+        ds = 100 * sh * (np.average(g.s, weights=g.w) - g.s.mean())
+        de = 100 * sh * (np.average(g.e, weights=g.w) - g.e.mean())
         dr = g.groupby('drive').agg(w=('w', 'first'), ytg=('ytg', 'first'), y=('y', 'sum'))
         dr = dr[dr.ytg > (9 if lg == 'cfb' else 5)]
         if lg == 'cfb':
@@ -70,5 +76,8 @@ def corrections(lg, D, variant):
             r = (dr.y / dr.ytg).clip(upper=1.5)
             a_all = 100 * r.mean() if len(r) else 0
             a_w = 100 * np.average(r, weights=dr.w) if dr.w.sum() > 0 else a_all
-        out[(gk, t)] = (float(ds), float(de), float(a_w - a_all))
+        Wd = dr.w.sum(); shd = Wd / (Wd + kd) if kd else 1.0
+        da = shd * (a_w - a_all)
+        if lg == 'cfb': da = min(da, 100 - a_all)          # never above 100% of available yards
+        out[(gk, t)] = (float(ds), float(de), float(da))
     return out

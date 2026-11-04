@@ -143,6 +143,11 @@ ENDS in an interception / lost fumble counts as the better of its own available-
 drives (a turnover can't hurt the offense; yards gained before it still count). Displayed Available Yards % is unchanged. Refitted
 CFB+NFL; prediction of other games' margins unchanged (fit_xpts.py compares variants A-F). add_totals re-run on the new values.
 CFB needs out7/drivecharts/*.json next to the page when add_xpts runs (it is, inside rebuild_wN.sh).
+CFB GARBAGE TIME (Nov 3 2026, xpts_model cfb 'garbage'): success rate, explosive rate and available-yards share for the deserved score
+come from competitive plays/drives (score margin faded out around 43/37/27/22 pts in Q1-Q4, +/-7 fade; competitive rates blended toward
+full-game rates with 40 plays / 6 drives of weight). build/garbage_time.py; add_xpts stores box xptsGarbageAdj and needs
+cfb_full/prepped_to.pkl. Tested: CFB prediction slightly better (~80% confidence); NFL showed no gain -> NFL not applied (revisit with a
+multi-season NFL refit).
 
 ### Redesign (`/new/`, Nov 3 2026) — run on EVERY publish after copying the pages into the repo
 The dark broadcast redesign + Scoreboard tab (games by week -> full box score) lives at `new/` beside the original site until

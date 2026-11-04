@@ -1,18 +1,32 @@
 {
  "cfb": {
   "coef": {
-   "intercept": -4.539,
-   "drives": -1.115,
-   "drivesXavail": 4.163,
-   "drivesXsuccess": 3.35,
-   "drivesXexpl": 2.888
+   "intercept": -3.791,
+   "drives": -1.024,
+   "drivesXavail": 4.175,
+   "drivesXsuccess": 3.058,
+   "drivesXexpl": 2.491
   },
   "availInput": "availYardsPctNoTO",
   "winSlope": 0.135,
   "teamGames": 1662,
-  "cvMAE": 5.93,
-  "cvR2": 0.75,
-  "boxWinnerWonPct": 81.5
+  "cvMAE": 5.89,
+  "cvR2": 0.754,
+  "boxWinnerWonPct": 81.5,
+  "garbage": {
+   "cutoffs": [
+    43,
+    37,
+    27,
+    22
+   ],
+   "fade": 7,
+   "note": "score margin by quarter; weight 1 up to cutoff-7, 0 beyond cutoff+7; OT always competitive; competitive-only rates blended toward full-game rates with 40 plays / 6 drives of weight (small samples)",
+   "shrink": [
+    40,
+    6
+   ]
+  }
  },
  "nfl": {
   "coef": {
@@ -28,7 +42,7 @@
   "cvR2": 0.531,
   "boxWinnerWonPct": 70.8
  },
- "_doc": "Box-score expected score (refitted Nov 3, 2026 on CFB Weeks 1-9 / NFL Weeks 1-8, no turnover term, TURNOVER-NEUTRAL drives: a drive that ends in an interception or lost fumble counts as the better of what it gained and the team's average drive in the available-yards share (box drives.availYardsPctNoTO; 'availInput'), so a turnover doesn't drag down the offense's deserved score - the user's call: turnovers are variance). Coefficients are FIXED and applied as-is to new games. xPts = max(0, intercept + drives*b_drives + drives*availYardsPctNoTO/100*b_drivesXavail + drives*successRate/100*b_drivesXsuccess + drives*explosiveRate/100*b_drivesXexpl (CFB only)), rounded to 0.1. xWin = round(100/(1+exp(-winSlope*(xPts - opp xPts)))). cvMAE/cvR2 = 5-fold cross-validated fit to actual points. Variant comparison: fit_xpts.py (prediction of other games' margins unchanged vs the Nov 2 model).",
+ "_doc": "Box-score expected score (refitted Nov 3, 2026 on CFB Weeks 1-9 / NFL Weeks 1-8, no turnover term, TURNOVER-NEUTRAL drives: a drive that ends in an interception or lost fumble counts as the better of what it gained and the team's average drive in the available-yards share (box drives.availYardsPctNoTO; 'availInput'), so a turnover doesn't drag down the offense's deserved score - the user's call: turnovers are variance). Coefficients are FIXED and applied as-is to new games. xPts = max(0, intercept + drives*b_drives + drives*availYardsPctNoTO/100*b_drivesXavail + drives*successRate/100*b_drivesXsuccess + drives*explosiveRate/100*b_drivesXexpl (CFB only)), rounded to 0.1. xWin = round(100/(1+exp(-winSlope*(xPts - opp xPts)))). cvMAE/cvR2 = 5-fold cross-validated fit to actual points. Variant comparison: fit_xpts.py (prediction of other games' margins unchanged vs the Nov 2 model). CFB also removes GARBAGE TIME (Nov 3, 2026, cfb 'garbage'): success rate, explosive rate and available-yards share are taken from competitive plays/drives only (score margin faded out around 43/37/27/22 points in Q1-Q4; garbage_time.py), stored per box as xptsGarbageAdj.",
  "_previous_oct25": {
   "cfb": {
    "coef": {
@@ -87,6 +101,23 @@
    "cvMAE": 5.06,
    "cvR2": 0.577,
    "boxWinnerWonPct": 78.0
+  }
+ },
+ "_previous_nov3_turnover_only": {
+  "cfb": {
+   "coef": {
+    "intercept": -4.539,
+    "drives": -1.115,
+    "drivesXavail": 4.163,
+    "drivesXsuccess": 3.35,
+    "drivesXexpl": 2.888
+   },
+   "availInput": "availYardsPctNoTO",
+   "winSlope": 0.135,
+   "teamGames": 1662,
+   "cvMAE": 5.93,
+   "cvR2": 0.75,
+   "boxWinnerWonPct": 81.5
   }
  }
 }

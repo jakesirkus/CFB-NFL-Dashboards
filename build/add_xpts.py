@@ -5,6 +5,9 @@ Turnover-neutral drives (Nov 3 2026, model 'availInput' = 'availYardsPctNoTO'): 
 of what it gained and the team's average drive share in the available-yards share used here (box drives.availYardsPctNoTO, from the drive chart; the displayed Available Yards % is unchanged),
 so an interception on the first play of a drive no longer drags the offense's deserved score down. Drive charts: inline (NFL) or
 <IN dir>/drivecharts/*.json (CFB).  Fit/compare: fit_xpts.py.
+Garbage time (CFB, Nov 3 2026, model 'garbage'): success rate, explosive rate and available-yards share come from competitive plays /
+drives only (score margin faded out around 43/37/27/22 points by quarter; garbage_time.py, needs cfb_full/prepped_to.pkl). Stored as
+box xptsGarbageAdj = additive shifts to the box-score values; drive count unchanged.
 
 usage: add_xpts.py cfb|nfl IN.html OUT.html [--recompute gk,gk,...] [--all] [--prev PREV.html]
   default      compute only games that have no xPts yet (new games)
@@ -40,9 +43,11 @@ def avail_noto(drs, pub):
     if not av: return 0.0
     s0 = sum(d['yards'] / (100 - d['spot1']) for d in ok) / len(ok) if ok else 0.0
     return round(100 * sum(max(d['yards'] / (100 - d['spot1']), s0) if d['result'] in TO else d['yards'] / (100 - d['spot1']) for d in av) / len(av), 1)
+GT = M.get('garbage')       # CFB (Nov 3): {'cutoffs': [Q1..Q4 margin], 'fade': pts} -> box xptsGarbageAdj = [d_success, d_explosive, d_avail]
 def inputs(b):
-    return (V(b['drives']['total']) or 0, V(b['drives'].get(AVK, b['drives']['availYardsPct'])) or 0, V(b['overall']['successRate']) or 0,
-            V(b['overall']['explosiveRate']) or 0, V(b['turnovers']['ints']) or 0, V(b['turnovers']['fumbleEvents']) or 0)
+    g = b.get('xptsGarbageAdj') or [0, 0, 0] if GT else [0, 0, 0]
+    return (V(b['drives']['total']) or 0, (V(b['drives'].get(AVK, b['drives']['availYardsPct'])) or 0) + g[2], (V(b['overall']['successRate']) or 0) + g[0],
+            (V(b['overall']['explosiveRate']) or 0) + g[1], V(b['turnovers']['ints']) or 0, V(b['turnovers']['fumbleEvents']) or 0)
 def xpts(b):
     d, av, sr, ex, ints, fum = inputs(b)
     raw = (C['intercept'] + C['drives'] * d + C['drivesXavail'] * d * av / 100 + C['drivesXsuccess'] * d * sr / 100
@@ -63,6 +68,16 @@ if AVK == 'availYardsPctNoTO':                 # fill the turnover-neutral avail
             drs = [d for d in CH.get(gk) or [] if d['team'] == t and (d.get('plays') or 0) > 0 and d.get('spot1') is not None]
             x['drives']['availYardsPctNoTO'] = avail_noto(drs, pub) if drs else pub; nch += bool(drs)
     print(f'{LG}: turnover-neutral available-yards share on {nch} team-boxes (drive charts found)')
+if GT:                                         # garbage time: rates from competitive plays/drives (garbage_time.py)
+    import sys as _s; _s.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import garbage_time
+    GC = garbage_time.corrections_spec(LG, D, (tuple(GT['cutoffs']), GT['fade']), tuple(GT.get('shrink', (0, 0))))
+    ng = 0
+    for gk, v in D['boxscores'].items():
+        for t, x in v.items():
+            if t == 'driveChart': continue
+            c = GC.get((gk, t), (0.0, 0.0, 0.0)); x['xptsGarbageAdj'] = [round(c[0], 2), round(c[1], 2), round(c[2], 2)]; ng += any(c)
+    print(f'{LG}: garbage-time adjustment on {ng} team-boxes')
 P = load(PREV)[3]['boxscores'] if PREV else {}
 done = kept = 0
 for gk, v in D['boxscores'].items():

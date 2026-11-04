@@ -13,4 +13,9 @@ for p in sys.argv[2:]:
     if n: s = s.replace(OLD, NEW); print(p, 'patched', n)
     if NEW2 not in s:
         n2 = s.count(OLD2); s = s.replace(OLD2, NEW2); print(p, 'turnover-drive note', n2)
+    # Nov 3: CFB garbage time
+    G_OLD = "counts as at least an average drive."
+    G_NEW = "counts as at least an average drive. Garbage time (lopsided score late in the game) is left out."
+    if LG == 'cfb' and G_NEW not in s and G_OLD in s:
+        print(p, 'garbage-time note', s.count(G_OLD)); s = s.replace(G_OLD, G_NEW)
     open(p, 'w').write(s)
