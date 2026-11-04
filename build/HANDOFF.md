@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v38.html).
+State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v39.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -136,6 +136,13 @@ patch_pace_ui.py (box rows, team tiles, leaderboard columns, Matchup 'Projected 
 Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nfl.html` at the repo root are just redirects to the folders — never upload page copies there.)
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
+
+### Deserved score: turnover-neutral drives (Nov 3 2026)
+xpts_model.json 'availInput' = 'availYardsPctNoTO': add_xpts.py fills box drives.availYardsPctNoTO from the drive charts — a drive that
+ENDS in an interception / lost fumble counts as the better of its own available-yards share and the team's average share on its other
+drives (a turnover can't hurt the offense; yards gained before it still count). Displayed Available Yards % is unchanged. Refitted
+CFB+NFL; prediction of other games' margins unchanged (fit_xpts.py compares variants A-F). add_totals re-run on the new values.
+CFB needs out7/drivecharts/*.json next to the page when add_xpts runs (it is, inside rebuild_wN.sh).
 
 ### Redesign (`/new/`, Nov 3 2026) — run on EVERY publish after copying the pages into the repo
 The dark broadcast redesign + Scoreboard tab (games by week -> full box score) lives at `new/` beside the original site until

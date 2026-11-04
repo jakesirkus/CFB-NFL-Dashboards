@@ -5,7 +5,12 @@ LG = sys.argv[1]
 OLD = "what each offense should have scored from drives, share of available yards gained, success rate, explosive plays and interceptions + half of fumbles. Field position, return/defensive TDs and red-zone finishing are left out on purpose."
 NEW = ("what each offense should have scored from drives, share of available yards gained, success rate" + (" and explosive plays" if LG == 'cfb' else "")
        + ". Turnovers are not counted against the offense (treated as luck). Field position, return/defensive TDs and red-zone finishing are left out on purpose.")
+# Nov 3: turnover-neutral drives
+OLD2 = "Turnovers are not counted against the offense (treated as luck)."
+NEW2 = "Turnovers are not counted against the offense (treated as luck): a drive that ends in an interception or lost fumble counts as at least an average drive."
 for p in sys.argv[2:]:
     s = open(p).read(); n = s.count(OLD)
-    if not n: print(p, 'already patched' if 'not counted against the offense' in s else 'TEXT NOT FOUND'); continue
-    open(p, 'w').write(s.replace(OLD, NEW)); print(p, 'patched', n)
+    if n: s = s.replace(OLD, NEW); print(p, 'patched', n)
+    if NEW2 not in s:
+        n2 = s.count(OLD2); s = s.replace(OLD2, NEW2); print(p, 'turnover-drive note', n2)
+    open(p, 'w').write(s)
