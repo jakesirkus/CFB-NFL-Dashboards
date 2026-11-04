@@ -21,7 +21,7 @@ python3 -I ../add_early_sr.py cfb out7
 python3 -I ../add_offsched.py cfb out7 prepped_to.pkl
 python3 -I ../add_bigplays.py cfb out7 prepped_to.pkl     # box-score big plays 20+/30+/40+ with hover lists (Nov 1)
 python3 -I ../add_pace.py cfb out7 prepped_to.pkl         # pace stats (Nov 2)
-python3 -I ../add_xpts.py cfb out7/index.html out7/index.html --all   # every game (model refitted without turnovers, Nov 2)
+python3 -I ../add_xpts.py cfb out7/index.html out7/index.html --all   # every game (deserved score v3 / option 4, Nov 3; reads prepped_to.pkl)
 python3 -I ../patch_xpts_text.py cfb out7/index.html
 python3 -I ../add_totals.py cfb out7/index.html out7/index.html   # projected score / total for the Matchup tab (Nov 2)
 python3 -I ../add_line_stats.py cfb out7/index.html out7/index.html

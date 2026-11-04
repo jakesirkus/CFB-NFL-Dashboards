@@ -1,83 +1,49 @@
-"""Box-score expected score (xPts) and deserved win % (xWin) for every game on a dashboard page.
-Model = build/xpts_model.json (fixed coefficients, refitted Nov 2 2026 without a turnover term; see its _doc).
-Writes boxscores[gk][team].meta.xPts/xWin, games[team][i].xPts/xPtsAllowed/xWin, and meta.xptsModel.
-Turnover-neutral drives (Nov 3 2026, model 'availInput' = 'availYardsPctNoTO'): a drive that ENDS in a turnover counts as the better
-of what it gained and the team's average drive share in the available-yards share used here (box drives.availYardsPctNoTO, from the drive chart; the displayed Available Yards % is unchanged),
-so an interception on the first play of a drive no longer drags the offense's deserved score down. Drive charts: inline (NFL) or
-<IN dir>/drivecharts/*.json (CFB).  Fit/compare: fit_xpts.py.
-Garbage time (CFB, Nov 3 2026, model 'garbage'): success rate, explosive rate and available-yards share come from competitive plays /
-drives only (score margin faded out around 43/37/27/22 points by quarter; garbage_time.py, needs cfb_full/prepped_to.pkl). Stored as
-box xptsGarbageAdj = additive shifts to the box-score values; drive count unchanged.
+"""Box-score expected (deserved) score (xPts) and deserved win % (xWin) for every game on a dashboard page.
+Model = build/xpts_model.json, VERSION 3 (Nov 3 2026, the user's 'option 4'; see its _doc and xpts_v3.py):
+  success rate is the core; explosive plays rewarded (explosive-rate term) but each play counts at most 20 yards toward the
+  available-yards share (long TDs partly variance); a drive ending in a turnover counts exactly what it gained (like a punt);
+  garbage time faded out (NFL win probability / CFB score margin by quarter).
+Writes boxscores[gk][team].meta.xPts/xWin, box xptsInputs {av, sr, ex}, games[team][i].xPts/xPtsAllowed/xWin, meta.xptsModel.
+Play-by-play: NFL --pbp PBP.pkl|parquet (required); CFB reads cfb_full/prepped_to.pkl (garbage_time.py).
 
-usage: add_xpts.py cfb|nfl IN.html OUT.html [--recompute gk,gk,...] [--all] [--prev PREV.html]
+usage: add_xpts.py cfb|nfl IN.html OUT.html [--pbp PBP] [--recompute gk,gk,...] [--all] [--prev PREV.html]
   default      compute only games that have no xPts yet (new games)
   --recompute  also recompute these games (e.g. after their box score was regenerated)
-  --all        recompute every game; with --prev, a game whose model inputs are unchanged from PREV keeps PREV's values
-               (so a full NFL rebuild doesn't drift by 0.1 from rounding)"""
+  --all        recompute every game; with --prev, a game whose model inputs are unchanged from PREV keeps PREV's values"""
 import sys, json, math, os
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
+import xpts_v3
 LG, SRC, DST = sys.argv[1:4]; args = sys.argv[4:]
 REC = set(args[args.index('--recompute') + 1].split(',')) if '--recompute' in args else set()
 ALL = '--all' in args
 PREV = args[args.index('--prev') + 1] if '--prev' in args else None
-M = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xpts_model.json')))[LG]
+PBP = args[args.index('--pbp') + 1] if '--pbp' in args else None
+M = json.load(open(os.path.join(HERE, 'xpts_model.json')))[LG]
+assert M.get('version') == 3, 'xpts_model.json is not version 3'
 C = M['coef']; TAG = '<script id="dashboard-data" type="application/json">'
+if LG == 'nfl' and not PBP: sys.exit('NFL needs --pbp PBP.pkl')
 
 def load(p):
     s = open(p).read(); a = s.index(TAG) + len(TAG); b = s.index('</script>', a); return s, a, b, json.loads(s[a:b])
 def V(x): return x['value'] if isinstance(x, dict) and 'value' in x else x
-AVK = M.get('availInput', 'availYardsPct')
-TO = {'Interception', 'Fumble', 'Interception (Pick-6)', 'Fumble (Defensive TD)'}
-def avail_noto(drs, pub):
-    """available-yards % where a drive that ended in a turnover counts as the BETTER of what it actually gained and the team's
-    average share on its other drives (a turnover can't hurt; yards gained before it still count). CFB = pooled yards / available
-    yards (published value adjusted with chart yards); NFL = mean of per-drive shares (drives starting >5 yds out)."""
-    to = [d for d in drs if d['result'] in TO]
-    if not to: return pub
-    if LG == 'cfb':
-        S = sum(100 - d['spot1'] for d in drs); Y = pub * S / 100
-        exS = sum(100 - d['spot1'] for d in to); exY = sum(max(0, d['yards']) for d in to)
-        s0 = (Y - exY) / (S - exS) if S - exS > 0 else 0.0
-        Y2 = Y - exY + sum(max(max(0, d['yards']), s0 * (100 - d['spot1'])) for d in to)
-        return round(max(0.0, 100 * Y2 / S), 1) if S > 0 else 0.0
-    av = [d for d in drs if 100 - d['spot1'] > 5]; ok = [d for d in av if d['result'] not in TO]
-    if not av: return 0.0
-    s0 = sum(d['yards'] / (100 - d['spot1']) for d in ok) / len(ok) if ok else 0.0
-    return round(100 * sum(max(d['yards'] / (100 - d['spot1']), s0) if d['result'] in TO else d['yards'] / (100 - d['spot1']) for d in av) / len(av), 1)
-GT = M.get('garbage')       # CFB (Nov 3): {'cutoffs': [Q1..Q4 margin], 'fade': pts} -> box xptsGarbageAdj = [d_success, d_explosive, d_avail]
-def inputs(b):
-    g = b.get('xptsGarbageAdj') or [0, 0, 0] if GT else [0, 0, 0]
-    return (V(b['drives']['total']) or 0, (V(b['drives'].get(AVK, b['drives']['availYardsPct'])) or 0) + g[2], (V(b['overall']['successRate']) or 0) + g[0],
-            (V(b['overall']['explosiveRate']) or 0) + g[1], V(b['turnovers']['ints']) or 0, V(b['turnovers']['fumbleEvents']) or 0)
-def xpts(b):
-    d, av, sr, ex, ints, fum = inputs(b)
-    raw = (C['intercept'] + C['drives'] * d + C['drivesXavail'] * d * av / 100 + C['drivesXsuccess'] * d * sr / 100
-           + C.get('drivesXexpl', 0) * d * ex / 100 + C.get('expGiveaways', 0) * (ints + 0.5 * fum))
+def xpts(dr, inp):
+    raw = (C['intercept'] + C['drives'] * dr + C['drivesXavail'] * dr * inp['av'] / 100 + C['drivesXsuccess'] * dr * inp['sr'] / 100
+           + C['drivesXexpl'] * dr * inp['ex'] / 100)
     return round(max(0.0, raw), 1)
 def xwin(a, b): return float(round(100 / (1 + math.exp(-M['winSlope'] * (a - b)))))
 
 s, a, b, D = load(SRC)
-if AVK == 'availYardsPctNoTO':                 # fill the turnover-neutral available-yards share from the drive charts
-    import glob
-    CH = {g: v['driveChart'] for g, v in D['boxscores'].items() if v.get('driveChart')}
-    for f in glob.glob(os.path.join(os.path.dirname(os.path.abspath(SRC)), 'drivecharts', '*.json')): CH.update(json.load(open(f)))
-    nch = 0
-    for gk, v in D['boxscores'].items():
-        for t, x in v.items():
-            if t == 'driveChart': continue
-            pub = V(x['drives']['availYardsPct']) or 0
-            drs = [d for d in CH.get(gk) or [] if d['team'] == t and (d.get('plays') or 0) > 0 and d.get('spot1') is not None]
-            x['drives']['availYardsPctNoTO'] = avail_noto(drs, pub) if drs else pub; nch += bool(drs)
-    print(f'{LG}: turnover-neutral available-yards share on {nch} team-boxes (drive charts found)')
-if GT:                                         # garbage time: rates from competitive plays/drives (garbage_time.py)
-    import sys as _s; _s.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import garbage_time
-    GC = garbage_time.corrections_spec(LG, D, (tuple(GT['cutoffs']), GT['fade']), tuple(GT.get('shrink', (0, 0))))
-    ng = 0
-    for gk, v in D['boxscores'].items():
-        for t, x in v.items():
-            if t == 'driveChart': continue
-            c = GC.get((gk, t), (0.0, 0.0, 0.0)); x['xptsGarbageAdj'] = [round(c[0], 2), round(c[1], 2), round(c[2], 2)]; ng += any(c)
-    print(f'{LG}: garbage-time adjustment on {ng} team-boxes')
+I = xpts_v3.inputs(LG, D, M, PBP)
+miss = 0
+for gk, v in D['boxscores'].items():
+    for t, x in v.items():
+        if t == 'driveChart': continue
+        x['drives'].pop('availYardsPctNoTO', None); x.pop('xptsGarbageAdj', None)      # earlier versions' fields
+        z = I.get((gk, t))
+        if z is None:
+            miss += 1; z = {'av': V(x['drives']['availYardsPct']) or 0, 'dsr': 0.0, 'dex': 0.0}
+        x['xptsInputs'] = {'av': round(z['av'], 1), 'sr': round((V(x['overall']['successRate']) or 0) + z['dsr'], 2),
+                           'ex': round((V(x['overall']['explosiveRate']) or 0) + z['dex'], 2)}
 P = load(PREV)[3]['boxscores'] if PREV else {}
 done = kept = 0
 for gk, v in D['boxscores'].items():
@@ -86,11 +52,12 @@ for gk, v in D['boxscores'].items():
     need = ALL or gk in REC or any('xPts' not in v[t]['meta'] for t in ts)
     if not need: continue
     pv = P.get(gk)
-    if ALL and pv and all(t in pv and 'xPts' in pv[t]['meta'] and inputs(pv[t]) == inputs(v[t]) for t in ts):
+    if ALL and pv and all(t in pv and 'xPts' in pv[t]['meta'] and pv[t].get('xptsInputs') == v[t]['xptsInputs']
+                          and pv[t]['drives']['total'] == v[t]['drives']['total'] for t in ts):
         for t in ts: v[t]['meta']['xPts'] = pv[t]['meta']['xPts']
         kept += 1
     else:
-        for t in ts: v[t]['meta']['xPts'] = xpts(v[t])
+        for t in ts: v[t]['meta']['xPts'] = xpts(V(v[t]['drives']['total']) or 0, v[t]['xptsInputs'])
         done += 1
     t1, t2 = ts
     v[t1]['meta']['xWin'] = xwin(v[t1]['meta']['xPts'], v[t2]['meta']['xPts'])
@@ -101,13 +68,13 @@ for gk, v in D['boxscores'].items():
     for t, x in v.items():
         if t != 'driveChart' and 'xPts' in x['meta']:
             box[(t, x['meta']['week'], x['meta']['opp'])] = (x['meta']['xPts'], v[x['meta']['opp']]['meta']['xPts'], x['meta']['xWin'])
-miss = 0
+lmiss = 0
 for t, L in D['games'].items():
     for g in L:
         k = box.get((t, g['week'], g['opp']))
-        if k is None: miss += 1; continue
+        if k is None: lmiss += 1; continue
         g['xPts'], g['xPtsAllowed'], g['xWin'] = k
 D['meta']['xptsModel'] = M
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a] + js + s[b:])
-print(f'{LG} xPts: computed {done} games, kept {kept} unchanged, game-log rows without a box: {miss}')
+print(f'{LG} xPts v3: computed {done} games, kept {kept} unchanged, team-boxes without play-by-play inputs: {miss}, game-log rows without a box: {lmiss}')

@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v39.html).
+State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v40.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -136,6 +136,18 @@ patch_pace_ui.py (box rows, team tiles, leaderboard columns, Matchup 'Projected 
 Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nfl.html` at the repo root are just redirects to the folders — never upload page copies there.)
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
+
+### Deserved score VERSION 3 — the user's "option 4" (Nov 3 2026, CURRENT; supersedes the two notes below)
+User's philosophy: down-to-down success is the core; reward explosives but treat long TDs as partly variance; turnovers are variance
+(neutral: no penalty, no bonus). Implementation: xpts_v3.py + add_xpts.py (rewritten) + xpts_model.json version 3:
+  xPts = b0 + b1*drives + drives*(b2*avail + b3*success + b4*explosive)
+  avail = mean over drives of min(capped yards / yards-to-goal, 1), each play's gain capped at 20 yds; a turnover drive counts what it gained
+  (like a punt); garbage time faded (NFL win prob 90->98%; CFB margin 43/37/27/22 +/-7), small-sample blend (40 plays / 6 drives).
+  Box field xptsInputs {av, sr, ex}. NFL: add_xpts needs --pbp (assemble_nfl.py passes it); CFB reads cfb_full/prepped_to.pkl.
+NFL weights fitted on 2016-2025 nflverse pbp (nfl_hist_features.py / nfl_capped_yards.py -> /home/claude/data/nflhist; grid test
+nfl_xpts_grid.py, leave-one-season-out, forward next-game MAE 10.344 vs 10.458 old). Turnover-as-average-drive versions tested WORSE and
+were rejected by the user (they'd reward turning it over vs punting). CFB weights fitted on 2026 wks 1-9 (predict MAE 15.87 vs 15.96).
+Finding: NFL actual point margin predicts next games about as well as any deserved score; 50/50 mix best (10.21).
 
 ### Deserved score: turnover-neutral drives (Nov 3 2026)
 xpts_model.json 'availInput' = 'availYardsPctNoTO': add_xpts.py fills box drives.availYardsPctNoTO from the drive charts — a drive that
