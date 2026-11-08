@@ -60,5 +60,10 @@
   "fum_lost": false,
   "giveaway": false,
   "why": "ASU-BYU wk9: 'Sione Moa 1 Yd Fumble Recovery (Kick)' is BYU's own fumble recovered in the end zone for a TD (feed typed Fumble Recovery (Opponent)) - not a turnover"
+ },
+ "401871074725": {
+  "fum_lost": true,
+  "giveaway": true,
+  "why": "FIU-Missouri St wk10: FIU QB Kohl was sacked and fumbled; Missouri State's J.Cooper recovered and scored (feed row has no giveaway flag) - an FIU lost fumble"
  }
 }

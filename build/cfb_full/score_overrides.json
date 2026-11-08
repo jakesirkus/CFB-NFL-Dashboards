@@ -106,5 +106,72 @@
    ]
   ],
   "why": "KSU-MTSU wk9: '(  Run for Two-Point Conversion)' has no result; the feed's running score goes 7 -> 13 -> 19 (next TD + failed PAT), so the 2-pt try failed. Official 44-28 KSU (CFBD)."
+ },
+ "401858513454": {
+  "events": [
+   [
+    "Iowa",
+    7
+   ]
+  ],
+  "why": "Iowa-Northwestern wk10: B.Jackson's 96-yd kickoff-return TD is IOWA's (NU kicked off; Iowa's Buhr kicked the PAT) - feed running score NU 3 / Iowa 21. Official 24-10 Iowa (CFBD)."
+ },
+ "401869968509": {
+  "events": [
+   [
+    "South Alabama",
+    6
+   ]
+  ],
+  "why": "South Alabama-Louisiana wk10: TD upheld on review, then 'Davenport rush attempt failed' (2-pt try failed) after the review text. Feed 17 -> 23. Official 28-26 Louisiana (CFBD)."
+ },
+ "401862821805": {
+  "events": [
+   [
+    "Rice",
+    6
+   ]
+  ],
+  "why": "Rice-North Texas wk10: TD with 0:00 left, no try attempted. Feed 17 -> 23. Official 52-23 North Texas (CFBD)."
+ },
+ "401864534267": {
+  "events": [
+   [
+    "Northern Illinois",
+    6
+   ]
+  ],
+  "why": "NIU-San Jose St wk10: TD upheld on review, then 'Short kick attempt failed' after the review text. Feed 0 -> 6. Official 30-19 SJSU (CFBD)."
+ },
+ "401858285509": {
+  "events": [
+   [
+    "Clemson",
+    6
+   ]
+  ],
+  "why": "Clemson-Syracuse wk10: Lawson scoop-and-score upheld on review; 2-pt try failed (after PI re-try, 'Brown rush attempt failed'). Feed 12 -> 18. Official 18-13 Clemson (CFBD)."
+ },
+ "401871074725": {
+  "events": [
+   [
+    "Missouri State",
+    8
+   ]
+  ],
+  "why": "Missouri St-FIU wk10: FIU QB Kohl's sack-fumble was returned for a Missouri State TD, then Missouri State's 2-pt run (re-try after FIU holding) was good. Feed 9 -> 17. Official 23-20 FIU (CFBD)."
+ },
+ "401871076872": {
+  "events": [
+   [
+    "Middle Tennessee",
+    3
+   ],
+   [
+    "Middle Tennessee",
+    6
+   ]
+  ],
+  "why": "WKU-MTSU wk10: feed ends at 45-42 after the 48-yd FG with 0:01; CFBD official line score MTSU 14-7-14-16 = 51 (WKU 0-13-14-15 = 42), so MTSU scored a 6-pt TD on the final play (no try) that the feed omits. Attached to the FG row. Official 51-42 MTSU (CFBD)."
  }
 }

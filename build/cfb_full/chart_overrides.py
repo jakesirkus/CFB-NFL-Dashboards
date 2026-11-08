@@ -163,6 +163,41 @@ def fix(gk, ch):
         x['playList'].sort(key=lambda p: -(clk(p) or 0))
         y0 = x['playList'][0].get('yardline100')
         if y0 is not None: x['spot1'] = float(100 - y0)
+    elif gk == '10_401858513':   # Iowa - Northwestern: Iowa's 96-yd kickoff-return TD after NU's 3rd-qtr FG (feed logged it in NU's possession)
+        a = get(ch, 14)
+        if a['team'] == 'Northwestern' and a['result'] == 'Field Goal' and get(ch, 15)['result'] != 'Kickoff (Return TD)':
+            kt = '(04:14) #92 N.Dugandzic kickoff 61 yards to the UoI04 #22 B.Jackson return 96 yards to the NU 00 TOUCHDOWN, clock 04:03 #92 C.Buhr kick attempt good'
+            ch.insert(14, {'team': 'Northwestern', 'opponent': 'Iowa', 'q1': 3, 't1': '4:14', 'spot1': 35.0, 'q2': 3, 't2': '4:03', 'spot2': 35, 'plays': 1,
+                           'yards': 0, 'top': '0:00', 'result': 'Kickoff (Return TD)', 'color': 'blue', 'clickable': True, 'opp30': False, 'playText': kt,
+                           'teamScore': 3, 'oppScore': 21, 'scored': True, 'n': 0, 'how': 'KO',
+                           'playList': [{'q': 3, 'text': kt, 'scoring': True, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None}]})
+    elif gk == '10_401866454':   # Miami (OH) - Buffalo: Buffalo's 3rd-qtr punt was blocked and recovered in the end zone by Miami (TD)
+        x = get(ch, 13)
+        if x['team'] == 'Buffalo' and x['result'] == 'Punt' and 'blocked' in x['playText']: x.update({'result': 'Blocked Punt (TD)', 'color': 'blue'})
+    elif gk == '10_401871076':   # WKU - MTSU: official line score 51-42; MTSU's 6-pt TD on the final play is not in the feed (feed ends 45-42 at the FG)
+        x = get(ch, 26)
+        if x['team'] == 'Middle Tennessee' and x['result'] == 'Field Goal' and x['teamScore'] == 51:
+            x.update({'teamScore': 45, 'oppScore': 42})
+            t = 'Final play (missing from the play-by-play feed): Middle Tennessee scored a touchdown on the last snap after its game-winning field goal - official final 51-42 (CFBD line score MTSU 14-7-14-16).'
+            ch.insert(26, {'team': 'Western Kentucky', 'opponent': 'Middle Tennessee', 'q1': 4, 't1': '0:01', 'spot1': None, 'q2': 4, 't2': '0:00', 'spot2': None,
+                           'plays': 0, 'yards': 0, 'top': '0:00', 'result': 'Defensive TD (final play)', 'color': 'red', 'clickable': True, 'opp30': False,
+                           'playText': t, 'teamScore': 42, 'oppScore': 51, 'scored': False, 'n': 0, 'how': 'KO',
+                           'playList': [{'q': 4, 'text': t, 'scoring': True, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None}]})
+    elif gk == '10_401858289':   # BC - FSU opening drive: feed lists three later plays first (clock 15:00); start = first snap (BC 25)
+        x = get(ch, 1)
+        x['playList'].sort(key=lambda p: -(clk(p) if clk(p) else 0))
+        y0 = next((p.get('yardline100') for p in x['playList'] if p.get('yardline100') is not None), None)
+        if y0 is not None: x['spot1'] = float(100 - y0)
+    elif gk == '10_401856852':   # ASU - Colorado: ASU's TD drive began after Colorado's punt at 0:47 of the 1st (feed tagged 4:31)
+        x = get(ch, 6)
+        if x['team'] == 'Arizona State' and x['t1'] == '4:31': x['t1'] = '0:47'
+    elif gk == '10_401871074':   # FIU - Missouri St: Kohl's sack-fumble returned for a Missouri St TD + 2-pt (17-9 -> 17-17); FIU lost fumble flagged by hand
+        x = get(ch, 20)
+        if x['team'] == 'Florida International' and x['result'] == 'Fumble':
+            x.update({'result': 'Fumble (Defensive TD)', 'color': 'red'})
+            rerun(ch, {20: (17, 17), 21: (20, 17), 22: (20, 20), 23: (23, 20)})
+            nx = get(ch, 21)
+            if nx['team'] == 'Florida International' and nx['how'] == 'FUMB': nx['how'] = 'KO'
     return renum(ch)
 
 if __name__ == '__main__':

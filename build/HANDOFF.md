@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 1, 2026): **CFB Weeks 1-9 complete — `out7`** (all 56 Week 9 FBS-involved games). **NFL Weeks 1-8 complete** (nfl_v40.html).
+State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (58 of 63 Week 10 FBS-involved games; 5 late games pending: WVU-TTU, Hawaii-UTEP, Fresno-Utah St, Texas St-Oregon St, Wyoming-UNLV). **NFL Weeks 1-8 complete** (nfl_v40.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -21,7 +21,7 @@ add_ppo.py, make_github_pack.py, verify_*.js (jsdom page tests; `npm install jsd
 ```
 
 ## CFB weekly update
-Latest recipe: `cfb_full/rebuild_w9.sh` (builds the new week on top of the previous published out dir; all UI patches are idempotent).
+Latest recipe: `cfb_full/rebuild_w10.sh` (out7 -> out8; to add late games: append their plays to combined_raw_w1_10.pkl, add ids to w10_gids.txt + official_finals.json, rerun) (builds the new week on top of the previous published out dir; all UI patches are idempotent).
 Week 9 new rules: make_tables retypes 'Field Goal Good' plays whose text says NO GOOD (missed-FG return TD); week-9 entries in
 score_overrides.json / flag_overrides.json / chart_overrides.py.
 Source: the CollegeFootballData API (`/plays?year=2026&week=N`, key from the user — never commit it) converted to the (`cfbd_to_csvfmt.py ref.pkl plays.json out.pkl`)
