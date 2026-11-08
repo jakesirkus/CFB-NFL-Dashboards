@@ -30,6 +30,32 @@ def renum(ch):
     for i, x in enumerate(ch): x['n'] = i + 1
     return ch
 
+END_X = ('End of Quarter', 'End of Half', 'End of Game', 'End of Regulation')
+def _sec(t):
+    try: m, s_ = str(t).split(':'); return int(m) * 60 + int(s_)
+    except Exception: return None
+def infer_missing_endings(gk, ch):
+    """Drives labeled 'End of Quarter/Half/Game' with time still on the clock, followed by the OTHER team's drive in the same
+    quarter: the feed is missing the drive-ending play (usually a punt or a failed 4th down). Infer it from where the other team
+    took over (Nov 8 2026): turnover on downs if the ball changed hands at the spot after a 4th-down snap; missed FG if the other
+    team started near the spot of the kick; punt if it started well downfield; otherwise leave it. Scores are never touched
+    (a drive whose team scored is skipped)."""
+    for i, d in enumerate(ch[:-1]):
+        nx = ch[i + 1]
+        if d['result'] not in END_X or (_sec(d.get('t2')) or 0) <= 30 or nx['team'] == d['team'] or nx['q1'] != d['q2']: continue
+        if d.get('spot2') is None or nx.get('spot1') is None: continue
+        if (nx.get('oppScore') or 0) != (d.get('teamScore') or 0): continue
+        at = 100 - d['spot2']                       # where the other team would take over at the spot (its own yard line)
+        last = next((q for q in reversed(d['playList']) if q.get('down')), None)
+        if last and last.get('down') == 4 and abs(at - nx['spot1']) <= 10: r, h, c = 'Turnover on Downs', 'DOWNS', 'red'
+        elif d['spot2'] >= 62 and abs(at + 7 - nx['spot1']) <= 8: r, h, c = 'Missed FG', 'MISS', 'red'
+        elif nx['spot1'] <= at - 15: r, h, c = 'Punt', 'PUNT', 'gray'
+        else: continue
+        d.update({'result': r, 'color': c})
+        d['playList'].append({'q': d['q2'], 'text': f"{r} (the drive-ending play is missing from the play-by-play feed; inferred from where {nx['team']} took over)",
+                              'scoring': False, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None})
+        if nx.get('how') in ('KO', None): nx['how'] = h
+
 def fix(gk, ch):
     ch = copy.deepcopy(ch)
     if gk == '1_401856668':      # Texas A&M - Missouri State: punt-return fumble out the back = TAMU safety (7-0 -> 9-0)
@@ -198,6 +224,14 @@ def fix(gk, ch):
             rerun(ch, {20: (17, 17), 21: (20, 17), 22: (20, 20), 23: (23, 20)})
             nx = get(ch, 21)
             if nx['team'] == 'Florida International' and nx['how'] == 'FUMB': nx['how'] = 'KO'
+    elif gk == '10_401858292':   # UConn - UNC: UConn's 4th-down punt from its 42 (UNC downed at its 3) is missing from the feed after the 3:58 incompletion
+        x = get(ch, 6)
+        if x['team'] == 'UConn' and x['result'] == 'End of Quarter' and x['t2'] == '3:58':
+            x.update({'result': 'Punt', 'color': get(ch, 1)['color']})
+            x['playList'].append({'q': 1, 'text': 'UConn punt (missing from the play-by-play feed) - North Carolina took over at its own 3 with 3:40 left in the 1st quarter.', 'scoring': False, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None})
+            nx = get(ch, 7)
+            if nx['team'] == 'North Carolina' and nx['how'] == 'KO': nx['how'] = 'PUNT'
+    infer_missing_endings(gk, ch)
     return renum(ch)
 
 if __name__ == '__main__':
