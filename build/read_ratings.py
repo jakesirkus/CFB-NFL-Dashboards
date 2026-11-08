@@ -22,7 +22,8 @@ else:
     nm = {str(a).strip(): str(b).strip() for a, b in list(wb['Name Map'].iter_rows(values_only=True))[1:] if a and b}
     FIX = {'Miami (FL)': 'Miami', 'Hawaii': "Hawai'i", 'JMU': 'James Madison', 'USF': 'South Florida', 'ECU': 'East Carolina',
            'FAU': 'Florida Atlantic', 'WKU': 'Western Kentucky', 'App. St.': 'App State', 'FIU': 'Florida International',
-           'ULM': 'UL Monroe', 'San Jose St.': 'San José State', 'UMass': 'Massachusetts'}
+           'ULM': 'UL Monroe', 'San Jose St.': 'San José State', 'UMass': 'Massachusetts',
+           'Appalachian State': 'App State', 'Pitt': 'Pittsburgh', 'San Jose State': 'San José State'}
     def name(x):
         x = str(x).strip()
         for cand in (x, nm.get(x), FIX.get(x), x.replace(' St.', ' State'), (nm.get(x) or '').replace(' St.', ' State')):
@@ -36,5 +37,18 @@ for r in data:
         miss.append(r[0]); continue
     wk = {str(w): float(r[col[f'Wk {w} Rating']]) for w in range(0, last + 1) if isinstance(r[col[f'Wk {w} Rating']], (int, float))}
     out[t] = {'wk': wk, 'current': float(r[col['Current Rating']])}
-json.dump({'lastWeekGraded': last, 'teams': out}, open(os.path.join(HERE, f'ratings/{LG}.json'), 'w'), indent=0)
+extra = {}
+if LG == 'cfb':      # Nov 8 2026: game-model inputs for the Predictions tab (Team HFA tab + Team Schedule Tool constants)
+    hrows = list(wb['Team HFA'].iter_rows(values_only=True))[3:]
+    hmiss = []
+    for r in hrows:
+        if not r or not r[0] or not isinstance(r[1], (int, float)): continue
+        t = name(r[0])
+        if t and t in out: out[t]['hfa'] = float(r[1])
+        elif t is None: hmiss.append(r[0])
+    tool = {str(r[4]).strip(): r[5] for r in wb['Team Schedule Tool'].iter_rows(min_row=1, max_row=12, values_only=True) if r and len(r) > 5 and r[4]}
+    extra['model'] = {'sd': float(tool.get('Game Std Dev for Win Prob', 14)), 'defaultHfa': float(tool.get('Default HFA (fallback)', 3)),
+                      'neutralAdj': float(tool.get('Neutral Field Adjustment', 0)), 'fcsRating': float(tool.get('Unrated/FCS SP+ Assumption', -25))}
+    print('HFA rows matched', sum('hfa' in v for v in out.values()), '| unmatched HFA names', hmiss, '| model', extra['model'])
+json.dump({'lastWeekGraded': last, 'teams': out, **extra}, open(os.path.join(HERE, f'ratings/{LG}.json'), 'w'), indent=0)
 print(f'{LG}: {len(out)} teams matched, last graded week {last}; unmatched workbook names: {miss}; dashboard teams without a rating: {sorted(teams - set(out))[:20]}')

@@ -137,6 +137,13 @@ Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nf
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
+### CFB Predictions tab (Nov 8 2026) — user's power-rating model vs the market (PUBLIC by the user's choice; spreads only)
+read_ratings.py cfb now also reads the Team HFA tab + Team Schedule Tool constants (SD 14, default HFA 3, neutral 0, FCS -25) into
+ratings/cfb.json ('hfa', 'model'). add_predictions.py PAGE WEEK games_wN.json lines_wN.json: home spread = -(Rh - Ra + HFA) (the
+'Weekly Games' formula), win% = Normal(-spread/SD), market = DraftKings via CFBD /lines, edge = market - model (>0 home).
+patch_predictions_ui.py adds the tab (after Lines). Both run at the end of rebuild_w10.sh (PRED_WEEK=11 default) - each week refresh
+CFBD /games + /lines for the upcoming week into /home/claude/data/cfbd/games_wN.json / lines_wN.json and set PRED_WEEK.
+
 ### NEXT (user asked to do this Nov 4): early-down vs late-down success rate in the deserved score
 Split success rate into early-down (1st/2nd) and late-down (3rd/4th) terms with separate weights; test on the 10 NFL seasons
 (add early/late success + garbage shifts to nfl_hist_features.py, rerun ~35 min, extend nfl_xpts_grid.py) and on CFB 2026; adopt only if
