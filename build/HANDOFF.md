@@ -137,6 +137,11 @@ Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nf
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
+### Tested and REJECTED (Nov 8 2026): field-position-neutral drive term and yards/play (NFL, 10 seasons, build/nfl_field_test.py)
+Next-game miss (lower better): current share-of-field 10.345 | pooled share 10.367 | capped yards/drive 10.411 | EP added per drive
+(nfl_drive_ep.py) 10.413 | no field term 10.421 | current + yards/play(40-yd cap) 10.324 but explosive weight turns negative and success
+weight drops 40% (against the user's design). Kept option 4 unchanged; user's concern was short-field turnovers (Chiefs-Jets wk9).
+
 ### Drive chart '4th ✓' badge (Nov 8 2026, CFB + NFL)
 patch_fourth_ui.py: page-side dcFourthConv(d) counts converted 4th downs from each drive's playList (not a punt/FG/kneel, not a pre-snap
 no-play flag; converted = next snap is 1st down, or TD, or gain >= distance on the drive's last play). Widens the drive chart team
