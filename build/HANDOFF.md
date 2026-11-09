@@ -158,6 +158,9 @@ ratings/cfb.json ('hfa', 'model'). add_predictions.py PAGE WEEK games_wN.json li
 'Weekly Games' formula), win% = Normal(-spread/SD), market = DraftKings via CFBD /lines, edge = market - model (>0 home).
 patch_predictions_ui.py adds the tab (after Lines). Both run at the end of rebuild_w10.sh (PRED_WEEK=11 default) - each week refresh
 CFBD /games + /lines for the upcoming week into /home/claude/data/cfbd/games_wN.json / lines_wN.json and set PRED_WEEK.
+OPENER (Nov 9): CFBD's DraftKings spreadOpen = first-ever DK number (summer look-ahead for some games) - NOT the weekly opener. Save the
+upcoming week's /lines on SUNDAY (after Saturday's games) as lines_wN_open.json; add_predictions uses its DK spread as the 'Weekly opener'
+(fallback Bovada spreadOpen). Tab shows opener, current (DK + Bovada), line move toward/away from the model, current + opener edge.
 
 ### NEXT (user asked to do this Nov 4): early-down vs late-down success rate in the deserved score
 Split success rate into early-down (1st/2nd) and late-down (3rd/4th) terms with separate weights; test on the 10 NFL seasons

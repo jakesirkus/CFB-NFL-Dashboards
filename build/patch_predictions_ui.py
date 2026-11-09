@@ -62,7 +62,7 @@ JS = r'''
     { key:'start', label:'Kickoff (ET)', get:function(g){ return g.start; } },
     { key:'match', label:'Matchup', get:function(g){ return g.away+' @ '+g.home; } },
     { key:'model', label:'Model line', get:function(g){ return g.model; }, title:'Your power ratings: home rating − away rating + home-field advantage (0 at neutral sites)' },
-    { key:'open', label:'Opening line', get:function(g){ return g.marketOpen===null ? 99 : g.marketOpen; }, title:'DraftKings opening spread' },
+    { key:'open', label:'Weekly opener', get:function(g){ return g.marketOpen===null ? 99 : g.marketOpen; }, title:'This week’s opening spread: DraftKings line captured Sunday after last week’s games (Bovada’s opener if DraftKings hadn’t posted yet)' },
     { key:'market', label:'Current line', get:function(g){ return g.market===null ? 99 : g.market; }, title:'DraftKings current spread (other books underneath)' },
     { key:'move', label:'Line move', get:function(g){ var m = prMove(g); return m ? (m.rel==='toward' ? m.pts : -m.pts) : -99; }, title:'Points the line has moved since it opened, and whether it moved toward your model’s number or away from it' },
     { key:'absEdge', label:'Edge (pts)', get:function(g){ return g.edge===null ? -1 : Math.abs(g.edge); }, title:'Current spread − model spread (the opener’s edge underneath)' },
@@ -97,7 +97,7 @@ JS = r'''
         + '<td style="white-space:nowrap">'+prKick(g)+'</td>'
         + '<td><span class="team-name">'+g.away+'</span> @ <span class="team-name">'+g.home+'</span>'+(g.neutral?'<span class="pr-n" title="Neutral site">N</span>':'')+'</td>'
         + '<td class="num">'+prFav(g, g.model)+'</td>'
-        + '<td class="num">'+(g.marketOpen===null?'<span style="color:var(--ink-muted)">—</span>':prFav(g, g.marketOpen))+'</td>'
+        + '<td class="num">'+(g.marketOpen===null?'<span style="color:var(--ink-muted)">—</span>':prFav(g, g.marketOpen))+(g.openSource && g.openSource.indexOf('Bovada')===0?'<span class="pr-sub">Bovada open</span>':'')+'</td>'
         + '<td class="num">'+(g.market===null?'<span style="color:var(--ink-muted)">no line yet</span>':prFav(g, g.market))+(oth?'<span class="pr-sub">'+oth+'</span>':'')+'</td>'
         + '<td class="num" style="white-space:nowrap">'+mv+'</td>'
         + '<td class="num"><span class="pr-edge'+cls+'">'+(ae===null?'—':ae.toFixed(1))+'</span>'+oe+'</td>'
@@ -110,7 +110,7 @@ JS = r'''
     var upd = new Date(PR.updated); var updTxt = isNaN(upd) ? PR.updated : upd.toLocaleString('en-US',{month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/New_York'})+' ET';
     document.getElementById('prNote').innerHTML = '<b>Week '+PR.week+'</b> · '+rows.length+' of '+nAll+' games shown ('+nLine+' with a market line). '
       + 'Model line = power ratings through Week '+PR.ratingsThroughWeek+': home rating − away rating + the home team’s home-field advantage (0 at neutral sites; FCS teams rated '+PR.model.fcsRating+'). '
-      + 'Lines = '+PR.source+' (opener and current), updated '+updTxt+'. Since the open, '+nTow+' lines have moved <span class="pr-mv toward" style="display:inline;margin-left:0">toward</span> your model and '+nAway+' <span class="pr-mv away" style="display:inline;margin-left:0">away</span> from it. '
+      + 'Current line = '+PR.source+', updated '+updTxt+'. Weekly opener = the DraftKings line captured '+(PR.openSnapshot ? new Date(PR.openSnapshot).toLocaleString('en-US',{weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/New_York'})+' ET' : 'Sunday')+' (Bovada’s opener where DraftKings hadn’t posted). Since the open, '+nTow+' lines have moved <span class="pr-mv toward" style="display:inline;margin-left:0">toward</span> your model and '+nAway+' <span class="pr-mv away" style="display:inline;margin-left:0">away</span> from it. '
       + 'Edge = points between the current spread and the model spread (opener’s edge underneath); <span class="pr-edge v3">3+</span> and <span class="pr-edge v5">5+</span> highlight value.';
   }
   if(PR){
@@ -122,7 +122,7 @@ JS = r'''
 for p in sys.argv[1:]:
     s = open(p).read()
     if 'id="tabBtnPreds"' in s:
-        if 'function prMove(' in s: print(p, 'already patched'); continue
+        if 'g.openSource' in s: print(p, 'already patched'); continue
         a0 = s.index('\n  // ---------- Predictions tab ----------'); b0 = s.index("\n  confFilter.value = 'all';", a0)
         s = s[:a0] + JS + s[b0:]
         c0 = s.index('\n  .pr-edge{'); c1 = s.index('text-align:left; }\n', c0) + len('text-align:left; }\n')

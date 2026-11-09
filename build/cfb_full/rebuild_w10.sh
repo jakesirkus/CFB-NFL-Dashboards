@@ -29,4 +29,4 @@ python3 -I ../opp_adjust.py cfb out8/index.html out8/index.html --blend 0.25
 #   CFBD /games?year=2026&week=$PW -> /home/claude/data/cfbd/games_w$PW.json, /lines?year=2026&week=$PW -> lines_w$PW.json
 PW=${PRED_WEEK:-11}
 python3 -I ../patch_predictions_ui.py out8/index.html
-python3 -I ../add_predictions.py out8/index.html $PW /home/claude/data/cfbd/games_w$PW.json /home/claude/data/cfbd/lines_w$PW.json
+python3 -I ../add_predictions.py out8/index.html $PW /home/claude/data/cfbd/games_w$PW.json /home/claude/data/cfbd/lines_w$PW.json /home/claude/data/cfbd/lines_w${PW}_open.json   # opener = Sunday snapshot
