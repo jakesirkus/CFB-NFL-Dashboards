@@ -10,7 +10,7 @@ python3 -I make_tables.py combined_raw_w1_10.pkl
 python3 -I full_pipeline.py >/dev/null && python3 -I winloss_and_radar.py >/dev/null && python3 -I finalize_radar.py >/dev/null
 rm -rf out8
 python3 -I build_week.py 10 w10_gids.txt out7 out8 | tail -1
-for p in patch_offsched_ui patch_early_sr_ui patch_oppadj_ui patch_rankings_ui patch_schedule_ui patch_matchup_ui patch_lines_ui patch_bigplays_ui patch_pace_ui; do
+for p in patch_offsched_ui patch_early_sr_ui patch_oppadj_ui patch_rankings_ui patch_schedule_ui patch_matchup_ui patch_lines_ui patch_bigplays_ui patch_pace_ui patch_fourth_ui; do
   python3 -I ../$p.py out8/index.html >/dev/null; done           # idempotent (out7 already has them)
 python3 -I polish_charts.py out8 10 | tail -1
 python3 -I chart_overrides.py out8

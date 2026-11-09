@@ -335,6 +335,11 @@
   .pr-n{ font-size:10px; font-weight:700; letter-spacing:0.06em; color:var(--ink-muted); border:1px solid var(--line-strong); border-radius:4px; padding:0 4px; margin-left:4px; }
   #prTable td{ vertical-align:middle; }
   #prTable th:nth-child(2), #prTable td:nth-child(2), #prTable th:nth-child(6), #prTable td:nth-child(6){ text-align:left; }
+
+  .dc-row{ grid-template-columns:minmax(150px,230px) 64px 48px 64px 76px 54px 48px 56px; min-width:560px; }
+  .dc-team{ flex-wrap:wrap; white-space:normal; row-gap:2px; overflow:visible; }
+  .dc-team .dc-opp30-badge, .dc-team .dc-4th-badge{ margin-left:0; }
+  .dc-4th-badge{ display:inline-block; font-size:8px; font-weight:700; letter-spacing:0.03em; color:var(--good); border:1px solid var(--good); border-radius:4px; padding:1px 4px; margin-left:5px; vertical-align:middle; white-space:nowrap; }
 </style>
 
 <div class="wrap">
@@ -1107,6 +1112,23 @@
       return '<div class="'+cls+'"><div class="dc-play-q">'+(p.q?('Q'+p.q):'')+'</div>'+situationHtml+'<div class="dc-play-text">'+escapeHtml(p.text)+'</div>'+badges+'</div>';
     }).join('');
   }
+  function dcFourthConv(d){              // number of converted 4th downs in a drive (see patch_fourth_ui.py)
+    var pl = d.playList || [], n = 0;
+    for(var k=0; k<pl.length; k++){
+      var p = pl[k]; if(p.down!==4) continue;
+      var t = String(p.text||'');
+      if(/\bpunts?\b|punt (for|is|blocked)|field goal|\bkneel/i.test(t) && !/punt formation\)/i.test(t)) continue;
+      if(/punt formation\)/i.test(t) && /\bpunts\b/i.test(t)) continue;
+      if(/neutral zone|offside|encroach|false start|delay of game|illegal (formation|shift|motion)|too many men|12 men/i.test(t) && /no play/i.test(t)) continue;   // pre-snap flags aren't attempts
+      var nx = null; for(var j=k+1; j<pl.length; j++){ if(pl[j].down){ nx = pl[j]; break; } }
+      var lost = /intercept|fumbles?.{0,80}recovered by (?!.*\bown\b)/i.test(t) && !/no play/i.test(t);
+      if(nx){ if(nx.down===1 && !lost) n++; continue; }
+      if(p.scoring && /touchdown/i.test(t) && !lost){ n++; continue; }
+      var m = t.match(/for (-?\d+) (yards?|yds?)/i), g = m ? +m[1] : (/no gain/i.test(t) ? 0 : null);
+      if(g!==null && p.distance && g>=p.distance && !lost && !/no play|incomplete/i.test(t)) n++;
+    }
+    return n;
+  }
   function buildDriveChart(rec){
     var chart = rec.driveChart || [];
     if(!chart.length) return '';
@@ -1128,6 +1150,7 @@
       var rowCls = 'dc-row' + (d.opp30 ? ' dc-opp30' : '');
       var rowAttrs = d.clickable ? ' data-dc-target="'+rid+'" tabindex="0" role="button"' : '';
       var oppBadge = d.opp30 ? '<span class="dc-opp30-badge" title="Scoring opportunity: offense ran a play inside the opponent 30">OPP</span>' : '';
+      var nConv4 = dcFourthConv(d); if(nConv4) oppBadge += '<span class="dc-4th-badge" title="Converted '+nConv4+' fourth down'+(nConv4>1?'s':'')+' on this drive">4th ✓'+(nConv4>1?'×'+nConv4:'')+'</span>';
       var row = '<div class="'+rowCls+'"'+rowAttrs+'>'
         + '<div class="dc-team"><span class="dc-team-dot '+dotCls+'"></span>'+escapeHtml(d.team)+oppBadge+'</div>'
         + '<div><div class="dc-spot">'+dcSpot(d.spot1)+'</div><div class="dc-sub">Q'+(d.q1||'—')+' · '+(d.t1||'—')+'</div></div>'
@@ -1147,7 +1170,7 @@
       return '<div class="dc-legend-item"><span class="dc-team-dot '+(i===0?'a':'b')+'"></span>'+escapeHtml(team)+'</div>';
     }).join('');
     return '<div class="bs-drivechart"><div class="bs-drivechart-title">Drive Chart</div>'
-      + '<div class="bs-drivechart-note">Drives in chronological order. Rows outlined and tinted with an <span class="dc-opp30-badge" style="margin-left:0;">OPP</span> badge are scoring opportunities (offense ran a play inside the opponent 30). Click anywhere on a row to expand the full play-by-play for that drive, with any play that actually scored (touchdown, made FG, safety, etc.) highlighted in green and any play with a penalty flagged in red with the call and yardage (parsed from the play text, so an occasional call may not be captured cleanly). "How" is how the possession started (KO = kickoff, PUNT/INT/FUMB/DOWNS/BLK/MISS = took over after the opponent\'s possession ended that way -- punt, interception, fumble, turnover on downs, blocked kick, or missed field goal). Spot is each team\'s own distance-from-goal (0–100). Score shows this team\'s points – opponent\'s points after each drive that scored.</div>'
+      + '<div class="bs-drivechart-note">Drives in chronological order. Rows outlined and tinted with an <span class="dc-opp30-badge" style="margin-left:0;">OPP</span> badge are scoring opportunities (offense ran a play inside the opponent 30). A <span class="dc-4th-badge" style="margin-left:0;">4th ✓</span> badge marks a drive that converted a 4th down. Click anywhere on a row to expand the full play-by-play for that drive, with any play that actually scored (touchdown, made FG, safety, etc.) highlighted in green and any play with a penalty flagged in red with the call and yardage (parsed from the play text, so an occasional call may not be captured cleanly). "How" is how the possession started (KO = kickoff, PUNT/INT/FUMB/DOWNS/BLK/MISS = took over after the opponent\'s possession ended that way -- punt, interception, fumble, turnover on downs, blocked kick, or missed field goal). Spot is each team\'s own distance-from-goal (0–100). Score shows this team\'s points – opponent\'s points after each drive that scored.</div>'
       + '<div class="bs-drivechart-legend">' + legend + '</div>'
       + '<div class="dc-list"><div class="dc-row dc-head"><div>Team</div><div>Start</div><div>How</div><div>End</div><div>Result</div><div>Pl-Yds</div><div>TOP</div><div>Score</div></div>'
       + body + '</div></div>';

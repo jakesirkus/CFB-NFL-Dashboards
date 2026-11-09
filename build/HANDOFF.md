@@ -137,6 +137,11 @@ Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nf
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
 
+### Drive chart '4th ✓' badge (Nov 8 2026, CFB + NFL)
+patch_fourth_ui.py: page-side dcFourthConv(d) counts converted 4th downs from each drive's playList (not a punt/FG/kneel, not a pre-snap
+no-play flag; converted = next snap is 1st down, or TD, or gain >= distance on the drive's last play). Widens the drive chart team
+column so OPP / 4th badges fit. In rebuild_w10.sh's patch loop; NFL template live_v24.html already patched.
+
 ### CFB Predictions tab (Nov 8 2026) — user's power-rating model vs the market (PUBLIC by the user's choice; spreads only)
 read_ratings.py cfb now also reads the Team HFA tab + Team Schedule Tool constants (SD 14, default HFA 3, neutral 0, FCS -25) into
 ratings/cfb.json ('hfa', 'model'). add_predictions.py PAGE WEEK games_wN.json lines_wN.json: home spread = -(Rh - Ra + HFA) (the
