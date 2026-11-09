@@ -2,7 +2,7 @@
 Model (same as the user's 'Weekly Games' sheet): home spread = -(home rating - away rating + HFA), HFA = home team's value from
 the workbook's Team HFA tab (neutral site: Neutral Field Adjustment, default HFA if missing); unrated/FCS team = FCS assumption;
 model home win % = Normal CDF(-spread / SD).  Ratings: build/ratings/cfb.json (read_ratings.py; 'current' + 'hfa' + 'model').
-Market: CollegeFootballData /lines (DraftKings current + opening spread). Edge = market spread - model spread (home perspective,
+Market: CollegeFootballData /lines: DraftKings current + opening spread (other books listed in 'others'). Edge = market spread - model spread (home perspective,
 the sheet's 'Edge (Model-Vegas)' column): edge > 0 -> model likes the home team against the number, < 0 -> the away team.
 usage: add_predictions.py PAGE.html WEEK GAMES.json LINES.json   (writes DATA.meta.predictions in place)"""
 import sys, os, json, math, datetime
@@ -22,7 +22,8 @@ for g in sorted(G, key=lambda g: (g['startDate'], g['homeTeam'])):
     neutral = bool(g.get('neutralSite'))
     hfa = M['neutralAdj'] if neutral else (T[h].get('hfa', M['defaultHfa']) if h in T else M['defaultHfa'])
     model = -(rh - ra + hfa); win = ncdf(-model / M['sd'])
-    ln = next((b for b in (L.get(g['id']) or {}).get('lines', []) if b.get('spread') is not None), None)
+    books = [b for b in (L.get(g['id']) or {}).get('lines', []) if b.get('spread') is not None]
+    ln = next((b for b in books if b.get('provider') == 'DraftKings'), books[0] if books else None)   # DraftKings = main line + opener
     mk = float(ln['spread']) if ln else None
     rec = dict(id=g['id'], start=g['startDate'], tbd=bool(g.get('startTimeTBD')), home=h, away=a, neutral=neutral,
                homeConf=g.get('homeConference'), awayConf=g.get('awayConference'), confGame=bool(g.get('conferenceGame')),
@@ -30,6 +31,8 @@ for g in sorted(G, key=lambda g: (g['startDate'], g['homeTeam'])):
                model=round(model, 2), homeWin=round(100 * win, 1),
                market=mk, marketOpen=(float(ln['spreadOpen']) if ln and ln.get('spreadOpen') is not None else None),
                book=(ln['provider'] if ln else None), edge=(round(mk - model, 2) if mk is not None else None),
+               openEdge=(round(float(ln['spreadOpen']) - model, 2) if ln and ln.get('spreadOpen') is not None else None),
+               others=[{'book': b['provider'], 'spread': float(b['spread'])} for b in books if b is not ln],
                completed=bool(g.get('completed')), homePoints=g.get('homePoints'), awayPoints=g.get('awayPoints'))
     out.append(rec)
 s = open(PAGE).read(); i = s.index(TAG) + len(TAG); j = s.index('</script>', i); D = json.loads(s[i:j])

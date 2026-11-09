@@ -37,23 +37,35 @@ CSS = '''
   .pr-pick{ font-weight:700; white-space:nowrap; }
   .pr-n{ font-size:10px; font-weight:700; letter-spacing:0.06em; color:var(--ink-muted); border:1px solid var(--line-strong); border-radius:4px; padding:0 4px; margin-left:4px; }
   #prTable td{ vertical-align:middle; }
-  #prTable th:nth-child(2), #prTable td:nth-child(2), #prTable th:nth-child(6), #prTable td:nth-child(6){ text-align:left; }
+  .pr-mv{ display:block; font-size:10px; font-weight:700; letter-spacing:0.03em; }
+  .pr-mv.toward{ color:var(--good); } .pr-mv.away{ color:var(--critical); }
+  #prTable th:nth-child(2), #prTable td:nth-child(2), #prTable th:nth-child(8), #prTable td:nth-child(8){ text-align:left; }
 '''
 JS = r'''
   // ---------- Predictions tab ----------
   var PR = DATA.meta && DATA.meta.predictions;
   var prMin = document.getElementById('prMin'), prConf = document.getElementById('prConf'), prSearch = document.getElementById('prSearch');
   var prSort = { key:'absEdge', dir:-1 };
-  function prLine(team, s){ if(s===null||s===undefined) return '—'; if(Math.abs(s)<0.05) return 'Pick’em'; return team+' '+(s>0?'+':'−')+Math.abs(s).toFixed(1).replace(/\.0$/,''); }
+  function prNum(s){ return Math.abs(s).toFixed(1).replace(/\.0$/,''); }
+  function prLine(team, s){ if(s===null||s===undefined) return '—'; if(Math.abs(s)<0.05) return 'Pick’em'; return team+' '+(s>0?'+':'−')+prNum(s); }
   function prFav(g, s){ return s<=0 ? prLine(g.home, s) : prLine(g.away, -s); }       // home-perspective spread -> "Fav -x"
   function prKick(g){ var d = new Date(g.start); if(isNaN(d)) return ''; var day = d.toLocaleDateString('en-US',{weekday:'short', month:'numeric', day:'numeric', timeZone:'America/New_York'});
     return g.tbd ? day+' · TBD' : day+' · '+d.toLocaleTimeString('en-US',{hour:'numeric', minute:'2-digit', timeZone:'America/New_York'}); }
+  function prMove(g){                     // line movement since the open, and whether it moved toward the model's number
+    if(g.market===null || g.marketOpen===null) return null;
+    var mv = g.market - g.marketOpen; if(Math.abs(mv) < 0.25) return { pts:0, team:null, rel:'none' };
+    var team = mv < 0 ? g.home : g.away;                       // spread fell -> money on the home side
+    var rel = Math.abs(g.market - g.model) < Math.abs(g.marketOpen - g.model) - 0.01 ? 'toward' : 'away';
+    return { pts:Math.abs(mv), team:team, rel:rel };
+  }
   var PR_COLS = [
     { key:'start', label:'Kickoff (ET)', get:function(g){ return g.start; } },
     { key:'match', label:'Matchup', get:function(g){ return g.away+' @ '+g.home; } },
     { key:'model', label:'Model line', get:function(g){ return g.model; }, title:'Your power ratings: home rating − away rating + home-field advantage (0 at neutral sites)' },
-    { key:'market', label:'Market line', get:function(g){ return g.market; } },
-    { key:'absEdge', label:'Edge (pts)', get:function(g){ return g.edge===null ? -1 : Math.abs(g.edge); }, title:'Market spread − model spread: how many points of value the model sees' },
+    { key:'open', label:'Opening line', get:function(g){ return g.marketOpen===null ? 99 : g.marketOpen; }, title:'DraftKings opening spread' },
+    { key:'market', label:'Current line', get:function(g){ return g.market===null ? 99 : g.market; }, title:'DraftKings current spread (other books underneath)' },
+    { key:'move', label:'Line move', get:function(g){ var m = prMove(g); return m ? (m.rel==='toward' ? m.pts : -m.pts) : -99; }, title:'Points the line has moved since it opened, and whether it moved toward your model’s number or away from it' },
+    { key:'absEdge', label:'Edge (pts)', get:function(g){ return g.edge===null ? -1 : Math.abs(g.edge); }, title:'Current spread − model spread (the opener’s edge underneath)' },
     { key:'pick', label:'Model side', get:function(g){ return g.edge===null ? '' : (g.edge>0 ? g.home : g.away); } },
     { key:'win', label:'Model win %', get:function(g){ return Math.max(g.homeWin, 100-g.homeWin); }, title:'Normal distribution of the model margin, SD '+(PR&&PR.model?PR.model.sd:14)+' pts' },
     { key:'ratings', label:'Ratings (away / home + HFA)', get:function(g){ return g.homeRating-g.awayRating; } }
@@ -75,24 +87,31 @@ JS = r'''
     else body.innerHTML = rows.map(function(g){
       var e = g.edge, ae = e===null ? null : Math.abs(e), cls = ae===null ? '' : (ae>=5 ? ' v5' : (ae>=3 ? ' v3' : ''));
       var side = e===null ? '—' : (e>0 ? prLine(g.home, g.market) : prLine(g.away, -g.market));
-      var mv = (g.marketOpen!==null && g.market!==null && Math.abs(g.marketOpen-g.market)>=0.25) ? '<span class="pr-sub">open '+prFav(g, g.marketOpen)+'</span>' : '';
+      var oth = (g.others||[]).map(function(o){ return o.book+' '+prFav(g, o.spread); }).join(' · ');
+      var m = prMove(g), mv = !m ? '<span style="color:var(--ink-muted)">—</span>' : (m.rel==='none' ? '<span style="color:var(--ink-muted)">no move</span>'
+          : prNum(m.pts)+' → '+m.team+'<span class="pr-mv '+m.rel+'">'+(m.rel==='toward'?'toward model':'away from model')+'</span>');
+      var oe = (g.openEdge===null||g.openEdge===undefined) ? '' : '<span class="pr-sub">open '+Math.abs(g.openEdge).toFixed(1)+'</span>';
       var fw = g.homeWin>=50 ? g.home : g.away, fp = Math.max(g.homeWin, 100-g.homeWin);
       var rt = function(r, ok){ return ok ? (r>0?'+':'')+r.toFixed(1) : 'FCS '+r.toFixed(0); };
       return '<tr>'
         + '<td style="white-space:nowrap">'+prKick(g)+'</td>'
         + '<td><span class="team-name">'+g.away+'</span> @ <span class="team-name">'+g.home+'</span>'+(g.neutral?'<span class="pr-n" title="Neutral site">N</span>':'')+'</td>'
         + '<td class="num">'+prFav(g, g.model)+'</td>'
-        + '<td class="num">'+(g.market===null?'<span style="color:var(--ink-muted)">no line yet</span>':prFav(g, g.market))+mv+'</td>'
-        + '<td class="num"><span class="pr-edge'+cls+'">'+(ae===null?'—':ae.toFixed(1))+'</span></td>'
+        + '<td class="num">'+(g.marketOpen===null?'<span style="color:var(--ink-muted)">—</span>':prFav(g, g.marketOpen))+'</td>'
+        + '<td class="num">'+(g.market===null?'<span style="color:var(--ink-muted)">no line yet</span>':prFav(g, g.market))+(oth?'<span class="pr-sub">'+oth+'</span>':'')+'</td>'
+        + '<td class="num" style="white-space:nowrap">'+mv+'</td>'
+        + '<td class="num"><span class="pr-edge'+cls+'">'+(ae===null?'—':ae.toFixed(1))+'</span>'+oe+'</td>'
         + '<td class="pr-pick">'+side+'</td>'
         + '<td class="num">'+fp.toFixed(0)+'%<span class="pr-sub">'+fw+'</span></td>'
         + '<td class="num">'+rt(g.awayRating, g.awayRated)+' / '+rt(g.homeRating, g.homeRated)+(g.neutral?'':' <span class="pr-sub">+'+g.hfa.toFixed(1)+' HFA</span>')+'</td>'
         + '</tr>'; }).join('');
     var nAll = PR.games.length, nLine = PR.games.filter(function(g){ return g.market!==null; }).length;
+    var nTow = PR.games.filter(function(g){ var m = prMove(g); return m && m.rel==='toward'; }).length, nAway = PR.games.filter(function(g){ var m = prMove(g); return m && m.rel==='away'; }).length;
     var upd = new Date(PR.updated); var updTxt = isNaN(upd) ? PR.updated : upd.toLocaleString('en-US',{month:'short', day:'numeric', hour:'numeric', minute:'2-digit', timeZone:'America/New_York'})+' ET';
     document.getElementById('prNote').innerHTML = '<b>Week '+PR.week+'</b> · '+rows.length+' of '+nAll+' games shown ('+nLine+' with a market line). '
       + 'Model line = power ratings through Week '+PR.ratingsThroughWeek+': home rating − away rating + the home team’s home-field advantage (0 at neutral sites; FCS teams rated '+PR.model.fcsRating+'). '
-      + 'Market = '+PR.source+', updated '+updTxt+'. Edge = points between the market spread and the model spread; <span class="pr-edge v3">3+</span> and <span class="pr-edge v5">5+</span> highlight value. Model side = the team the model likes against the current number.';
+      + 'Lines = '+PR.source+' (opener and current), updated '+updTxt+'. Since the open, '+nTow+' lines have moved <span class="pr-mv toward" style="display:inline;margin-left:0">toward</span> your model and '+nAway+' <span class="pr-mv away" style="display:inline;margin-left:0">away</span> from it. '
+      + 'Edge = points between the current spread and the model spread (opener’s edge underneath); <span class="pr-edge v3">3+</span> and <span class="pr-edge v5">5+</span> highlight value.';
   }
   if(PR){
     var prC = {}; PR.games.forEach(function(g){ if(g.homeConf) prC[g.homeConf]=1; if(g.awayConf) prC[g.awayConf]=1; });
@@ -102,7 +121,13 @@ JS = r'''
 '''
 for p in sys.argv[1:]:
     s = open(p).read()
-    if 'id="tabBtnPreds"' in s: print(p, 'already patched'); continue
+    if 'id="tabBtnPreds"' in s:
+        if 'function prMove(' in s: print(p, 'already patched'); continue
+        a0 = s.index('\n  // ---------- Predictions tab ----------'); b0 = s.index("\n  confFilter.value = 'all';", a0)
+        s = s[:a0] + JS + s[b0:]
+        c0 = s.index('\n  .pr-edge{'); c1 = s.index('text-align:left; }\n', c0) + len('text-align:left; }\n')
+        s = s[:c0] + CSS + s[c1:]
+        open(p, 'w').write(s); print(p, 'upgraded'); continue
     assert 'id="tabBtnLines"' in s, (p, 'run patch_lines_ui.py first')
     m = re.search(r'(<button class="tab-btn" id="tabBtnLines"[^>]*>Lines</button>)', s); assert m, (p, 'tab anchor')
     s = s[:m.end()] + '\n      ' + BTN + s[m.end():]
