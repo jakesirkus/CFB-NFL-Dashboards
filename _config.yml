@@ -1,0 +1,7 @@
+# GitHub Pages (Jekyll) settings: publish only the dashboards. The build/ folder (pipeline scripts, data, old page versions,
+# ~1 GB) stays in the repo but is not deployed - it was making Pages deploys time out (Nov 9 2026).
+exclude:
+  - build
+  - dashboards-build.tar.xz.part00
+  - dashboards-build.tar.xz.part01
+  - README.txt
