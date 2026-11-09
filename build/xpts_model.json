@@ -28,16 +28,18 @@
   "seasons": "2026 weeks 1-9",
   "fitMAE": 6.0,
   "fitR2": 0.743,
-  "boxWinnerWonPct": 81.8
+  "boxWinnerWonPct": 81.8,
+  "note_v4_test": "Nov 8 2026: v4 (yards/play, 30-yd cap) tested on CFB 2026 wks 1-10: predict 15.854 vs 15.841 (worse), explosive weight -> 0; NOT adopted for CFB"
  },
  "nfl": {
-  "version": 3,
+  "version": 4,
   "coef": {
-   "intercept": -0.165,
-   "drives": -1.02,
-   "drivesXavail": 4.181,
-   "drivesXsuccess": 2.495,
-   "drivesXexpl": 2.861
+   "intercept": 0.886,
+   "drives": -1.276,
+   "drivesXavail": 3.661,
+   "drivesXsuccess": 1.717,
+   "drivesXexpl": 0.664,
+   "drivesXypp": 1.916
   },
   "cap": 20,
   "shrink": [
@@ -51,16 +53,18 @@
    ],
    "note": "win-probability fade: full weight while the leader is under 90%, none at 98%"
   },
-  "winSlope": 0.19,
+  "winSlope": 0.195,
   "teamGames": 5516,
   "seasons": "2016-2025 (regular season + playoffs)",
-  "fitMAE": 5.29,
+  "fitMAE": 5.24,
   "fitR2": 0.549,
   "boxWinnerWonPct": 78.3,
-  "forwardTestMAE": 10.344,
-  "forwardTestMAE_previousFormula": 10.458
+  "forwardTestMAE": 10.333,
+  "forwardTestMAE_previousFormula": 10.345,
+  "yppCap": 30,
+  "note": "v4: + yards/play capped at 30 yds per play; weights constrained >= 0 (nnls)"
  },
- "_doc": "Box-score expected (deserved) score, VERSION 3 (Nov 3, 2026, the user's 'option 4'): xPts = max(0, intercept + drives*b_drives + drives*avail/100*b_drivesXavail + drives*success/100*b_drivesXsuccess + drives*explosive/100*b_drivesXexpl), rounded to 0.1. Success rate (EPA>0) is the core; explosive plays are rewarded via the explosive-rate term but every play's gain counts at most 'cap' (20) yards toward the available-yards share (mean over drives of min(capped yards / yards to goal, 1)), so a long TD is partly treated as variance. Turnovers: a drive that ends in a turnover counts exactly what it gained (like a punt) - never an extra penalty, never a bonus. Garbage time is faded out (NFL: win probability 90-98%; CFB: margin 43/37/27/22 by quarter +/-7) with small-sample blending ('shrink' = plays, drives). Inputs per box: xptsInputs {av, sr, ex} (sr/ex = box-score rates + garbage-time shift). Code: xpts_v3.py; NFL weights fitted on 2016-2025 (nfl_xpts_grid.py: forward prediction MAE 10.344 vs 10.458 for the previous formula), CFB on 2026. xWin = round(100/(1+exp(-winSlope*(xPts - opp xPts)))).",
+ "_doc": "Box-score expected (deserved) score, VERSION 3/4: CFB = version 3 (the user's 'option 4', Nov 3 2026); NFL = version 4 (Nov 8 2026: v3 + a yards-per-play term, each play capped at 30 yds, all weights >= 0; CFB tested and not adopted): xPts = max(0, intercept + drives*b_drives + drives*avail/100*b_drivesXavail + drives*success/100*b_drivesXsuccess + drives*explosive/100*b_drivesXexpl + drives*yardsPerPlay(30-yd cap)/10*b_drivesXypp), rounded to 0.1. Success rate (EPA>0) is the core; explosive plays are rewarded via the explosive-rate term but every play's gain counts at most 'cap' (20) yards toward the available-yards share (mean over drives of min(capped yards / yards to goal, 1)), so a long TD is partly treated as variance. Turnovers: a drive that ends in a turnover counts exactly what it gained (like a punt) - never an extra penalty, never a bonus. Garbage time is faded out (NFL: win probability 90-98%; CFB: margin 43/37/27/22 by quarter +/-7) with small-sample blending ('shrink' = plays, drives). Inputs per box: xptsInputs {av, sr, ex} (sr/ex = box-score rates + garbage-time shift). Code: xpts_v3.py; NFL weights fitted on 2016-2025 (nfl_xpts_grid.py: forward prediction MAE 10.344 vs 10.458 for the previous formula), CFB on 2026. xWin = round(100/(1+exp(-winSlope*(xPts - opp xPts)))).",
  "_previous_oct25": {
   "cfb": {
    "coef": {
@@ -181,6 +185,70 @@
    "cvMAE": 5.23,
    "cvR2": 0.531,
    "boxWinnerWonPct": 70.8
+  }
+ },
+ "_previous_nov8_v3": {
+  "cfb": {
+   "version": 3,
+   "coef": {
+    "intercept": -5.749,
+    "drives": -0.978,
+    "drivesXavail": 4.742,
+    "drivesXsuccess": 2.973,
+    "drivesXexpl": 4.366
+   },
+   "cap": 20,
+   "shrink": [
+    40,
+    6
+   ],
+   "garbage": {
+    "cutoffs": [
+     43,
+     37,
+     27,
+     22
+    ],
+    "fade": 7,
+    "note": "score margin by quarter, faded +/-7; OT always competitive"
+   },
+   "winSlope": 0.15,
+   "teamGames": 1662,
+   "seasons": "2026 weeks 1-9",
+   "fitMAE": 6.0,
+   "fitR2": 0.743,
+   "boxWinnerWonPct": 81.8,
+   "note_v4_test": "Nov 8 2026: v4 (yards/play, 30-yd cap) tested on CFB 2026 wks 1-10: predict 15.854 vs 15.841 (worse), explosive weight -> 0; NOT adopted for CFB"
+  },
+  "nfl": {
+   "version": 3,
+   "coef": {
+    "intercept": -0.165,
+    "drives": -1.02,
+    "drivesXavail": 4.181,
+    "drivesXsuccess": 2.495,
+    "drivesXexpl": 2.861
+   },
+   "cap": 20,
+   "shrink": [
+    40,
+    6
+   ],
+   "garbage": {
+    "wp": [
+     0.9,
+     0.98
+    ],
+    "note": "win-probability fade: full weight while the leader is under 90%, none at 98%"
+   },
+   "winSlope": 0.19,
+   "teamGames": 5516,
+   "seasons": "2016-2025 (regular season + playoffs)",
+   "fitMAE": 5.29,
+   "fitR2": 0.549,
+   "boxWinnerWonPct": 78.3,
+   "forwardTestMAE": 10.344,
+   "forwardTestMAE_previousFormula": 10.458
   }
  }
 }

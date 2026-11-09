@@ -1,5 +1,5 @@
 """Box-score expected (deserved) score (xPts) and deserved win % (xWin) for every game on a dashboard page.
-Model = build/xpts_model.json, VERSION 3 (Nov 3 2026, the user's 'option 4'; see its _doc and xpts_v3.py):
+Model = build/xpts_model.json, VERSION 4 (v3 + yards per play capped at 30 yds/play, Nov 8 2026); originally VERSION 3 (Nov 3 2026, the user's 'option 4'; see its _doc and xpts_v3.py):
   success rate is the core; explosive plays rewarded (explosive-rate term) but each play counts at most 20 yards toward the
   available-yards share (long TDs partly variance); a drive ending in a turnover counts exactly what it gained (like a punt);
   garbage time faded out (NFL win probability / CFB score margin by quarter).
@@ -19,7 +19,7 @@ ALL = '--all' in args
 PREV = args[args.index('--prev') + 1] if '--prev' in args else None
 PBP = args[args.index('--pbp') + 1] if '--pbp' in args else None
 M = json.load(open(os.path.join(HERE, 'xpts_model.json')))[LG]
-assert M.get('version') == 3, 'xpts_model.json is not version 3'
+assert M.get('version') in (3, 4), 'xpts_model.json is not version 3/4'
 C = M['coef']; TAG = '<script id="dashboard-data" type="application/json">'
 if LG == 'nfl' and not PBP: sys.exit('NFL needs --pbp PBP.pkl')
 
@@ -28,7 +28,7 @@ def load(p):
 def V(x): return x['value'] if isinstance(x, dict) and 'value' in x else x
 def xpts(dr, inp):
     raw = (C['intercept'] + C['drives'] * dr + C['drivesXavail'] * dr * inp['av'] / 100 + C['drivesXsuccess'] * dr * inp['sr'] / 100
-           + C['drivesXexpl'] * dr * inp['ex'] / 100)
+           + C['drivesXexpl'] * dr * inp['ex'] / 100 + C.get('drivesXypp', 0.0) * dr * inp.get('ypp', 0.0) / 10)
     return round(max(0.0, raw), 1)
 def xwin(a, b): return float(round(100 / (1 + math.exp(-M['winSlope'] * (a - b)))))
 
@@ -44,6 +44,7 @@ for gk, v in D['boxscores'].items():
             miss += 1; z = {'av': V(x['drives']['availYardsPct']) or 0, 'dsr': 0.0, 'dex': 0.0}
         x['xptsInputs'] = {'av': round(z['av'], 1), 'sr': round((V(x['overall']['successRate']) or 0) + z['dsr'], 2),
                            'ex': round((V(x['overall']['explosiveRate']) or 0) + z['dex'], 2)}
+        if 'ypp' in z: x['xptsInputs']['ypp'] = round(z['ypp'], 3)
 P = load(PREV)[3]['boxscores'] if PREV else {}
 done = kept = 0
 for gk, v in D['boxscores'].items():
@@ -77,4 +78,4 @@ for t, L in D['games'].items():
 D['meta']['xptsModel'] = M
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a] + js + s[b:])
-print(f'{LG} xPts v3: computed {done} games, kept {kept} unchanged, team-boxes without play-by-play inputs: {miss}, game-log rows without a box: {lmiss}')
+print(f'{LG} xPts v{M["version"]}: computed {done} games, kept {kept} unchanged, team-boxes without play-by-play inputs: {miss}, game-log rows without a box: {lmiss}')

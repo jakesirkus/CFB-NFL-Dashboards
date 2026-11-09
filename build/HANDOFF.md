@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 9 of 15 Week 9 games** (nfl_v42.html).
+State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 9 of 15 Week 9 games** (nfl_v43.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -136,6 +136,11 @@ patch_pace_ui.py (box rows, team tiles, leaderboard columns, Matchup 'Projected 
 Copy `index.html`, `cfb/`, `nfl/` into the repo, commit, push. (`cfb.html` / `nfl.html` at the repo root are just redirects to the folders — never upload page copies there.)
 **WARNING: make_github_pack.py deletes DEST first (`shutil.rmtree`). Never pass the repo checkout as DEST** — build into a
 scratch folder, then copy `index.html`, `nfl/`, `cfb/` into the repo (that would otherwise wipe `.git` and `build/`). (It also writes a "(3 steps)" copy for manual browser uploads — not needed with git.)
+
+### NFL deserved score VERSION 4 (Nov 8 2026, CURRENT for NFL; CFB stays on version 3)
+v3 + drives x yards-per-play/10 with each play capped at 30 yds (xpts_v3.py 'yppCap'), weights fitted with non-negative least squares
+on 2016-2025 so explosives stay positive. Fixes the ~1-pt overrating of offenses that gain little per snap (4-5.5 ypp). Forward test
+10.333 vs 10.345. CFB tried on 2026: slightly worse prediction and explosive weight -> 0, so CFB kept v3 (xpts_model cfb version 3).
 
 ### Tested and REJECTED (Nov 8 2026): field-position-neutral drive term and yards/play (NFL, 10 seasons, build/nfl_field_test.py)
 Next-game miss (lower better): current share-of-field 10.345 | pooled share 10.367 | capped yards/drive 10.411 | EP added per drive

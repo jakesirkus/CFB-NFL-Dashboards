@@ -21,7 +21,7 @@ for p in sys.argv[2:]:
     # Nov 3 (v3 / option 4): one canonical sentence, replaces whatever earlier version is on the page
     import re
     V3 = ("Box-score expected score: what each offense should have scored from its drives, down-to-down success rate, explosive plays and the share of "
-          "available yards gained (each play counts at most 20 yards there, so long touchdowns are rewarded but treated as partly luck). Turnovers are "
+          "available yards gained (each play counts at most 20 yards there, so long touchdowns are rewarded but treated as partly luck)" + (" plus yards per play (each play counted up to 30 yards)" if LG == "nfl" else "") + ". Turnovers are "
           "neither penalized nor rewarded: a drive that ends in a turnover counts what it gained, like a punt. Garbage time is left out. Field position, "
           "return/defensive TDs and red-zone finishing are left out on purpose. Deserved win % = how often a team with this box-score edge wins.")
     s, k = re.subn(r'Box-score expected score: what each offense should have scored from [^"]*?Deserved win % = how often a team with this box-score edge wins\.', V3, s)
