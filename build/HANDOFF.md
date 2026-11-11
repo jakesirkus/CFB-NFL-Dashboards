@@ -216,3 +216,5 @@ olPbeRaw, olTpsShare per game. Test (2026 wks 1-9/10): CFB scheme bias r 0.27 ->
 Rejected: time-to-throw adjustment (PFF charges QB-caused pressures to the QB, so OL pressure rate is already ~uncorrelated with
 TTT), true-pass-set-only rates (too few snaps, less reliable), grade mix-adjustment (no gain), DL opponent-scheme adjustment (no gain).
 PFF cache also needs true_pass_set_* fields (pass_blocking facet has them).
+OL sack weight (Nov 11 2026, user: sacks are mostly a QB stat): opp_adjust.py olStats = line yards 35%, stuff 21%, opportunity 17%,
+sack rate 15% (was 40%), power 12%; passPro = PB grade 30%, PBE 30%, pressure rate 20%, sack rate 20% (was 50%). DL recipes unchanged.

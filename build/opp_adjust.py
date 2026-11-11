@@ -169,11 +169,11 @@ for cat, comp in CATS:
 # ---------- offensive / defensive line composites (team play-by-play + PFF player composites), opponent-adjusted ----------
 RUNL = {'lineYards': 0.25, 'stuffPct': 0.15, 'opportunityPct': 0.12, 'powerPct': 0.08}
 LINE = {   # key: (side, recipe)     side 'off' = this team's OL, 'def' = this team's DL
-    'olStats':  ('off', dict(RUNL, sackPct=0.40)),
+    'olStats':  ('off', {'lineYards': 0.35, 'stuffPct': 0.21, 'opportunityPct': 0.17, 'powerPct': 0.12, 'sackPct': 0.15}),   # Nov 11: sacks are largely a QB stat (was 40%)
     'olPff':    ('off', {'olPbGrade': 0.30, 'olPbe': 0.20, 'olPressPct': 0.10, 'olRbGrade': 0.40}),
     'dlStats':  ('def', dict(RUNL, sackPct=0.40)),
     'dlPff':    ('def', {'dlPrGrade': 0.20, 'dlPrwr': 0.20, 'dlPressPct': 0.10, 'dlRdGrade': 0.30, 'dlStopPct': 0.20}),
-    'passPro':  ('off', {'sackPct': 0.50, 'olPbGrade': 0.20, 'olPbe': 0.20, 'olPressPct': 0.10}),
+    'passPro':  ('off', {'sackPct': 0.20, 'olPbGrade': 0.30, 'olPbe': 0.30, 'olPressPct': 0.20}),                            # Nov 11: sack rate 50% -> 20%
     'runBlock': ('off', {'lineYards': 0.20, 'stuffPct': 0.12, 'opportunityPct': 0.10, 'powerPct': 0.08, 'olRbGrade': 0.50}),
     'passRush': ('def', {'sackPct': 0.40, 'dlPrGrade': 0.20, 'dlPrwr': 0.25, 'dlPressPct': 0.15}),
     'runDef':   ('def', {'lineYards': 0.20, 'stuffPct': 0.12, 'opportunityPct': 0.10, 'powerPct': 0.08, 'dlRdGrade': 0.30, 'dlStopPct': 0.20}),
