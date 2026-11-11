@@ -3,8 +3,12 @@ Reads the weekly cache written by pff_fetch.py (build/pff/raw/{lg}/wN_*.json). E
 (same teams, final score, week within +-1); PFF franchises are mapped to dashboard team names by those matches.
 OL = T/G/C, DL = DI/ED.  Per team-game:
   olPbGrade  snap-weighted PFF pass-block grade      olPbSnaps  OL pass-block snaps
-  olPbe      pass-blocking efficiency = 100 - 100*(sacks + 0.75*(hits+hurries)) / pass-block snaps
-  olPressPct pressures allowed per 100 OL pass-block snaps
+  olPbe      pass-blocking efficiency = 100 - 100*(sacks + 0.75*(hits+hurries)) / pass-block snaps   } SCHEME-ADJUSTED (Nov 11 2026):
+  olPressPct pressures allowed per 100 OL pass-block snaps                                    } rate on true pass sets and on
+             all other pass blocks (screens, play action, quick throws), re-weighted to the league-average true-pass-set share
+             (so an offense that hides its line with quick game is judged as if it ran a normal mix; olPbeRaw / olPressPctRaw =
+             unadjusted, olTpsShare = this game's true-pass-set share of OL pass-block snaps).  Tested on 2026 weeks 1-9/10: removes
+             the scheme bias (CFB r with true-pass-set share 0.27 -> -0.01) and NFL first-half -> second-half r 0.24 -> 0.30.
   olRbGrade  snap-weighted run-block grade           olRbSnaps  OL run-block snaps
   dlPrGrade  snap-weighted pass-rush grade           dlPrSnaps  DL pass-rush snaps
   dlPrwr     pass-rush win rate (wins / opportunities)
@@ -83,7 +87,8 @@ for w in weeks:
         if r.get('position') not in OL: continue
         sn = n(r.get('snap_counts_pass_block')); A['pbSn'] += sn
         if r.get('grades_pass_block') is not None and sn: A['pbG'] += sn * r['grades_pass_block']; A['pbGs'] += sn
-        for f in ('sacks_allowed', 'hits_allowed', 'hurries_allowed', 'pressures_allowed'): A[f] += n(r.get(f))
+        for f in ('sacks_allowed', 'hits_allowed', 'hurries_allowed', 'pressures_allowed'): A[f] += n(r.get(f)); A['tps_' + f] += n(r.get('true_pass_set_' + f))
+        A['tpsSn'] += n(r.get('true_pass_set_snap_counts_pass_block'))
     for r in load(w, 'run_blocking'):
         if r.get('position') not in OL or r.get('franchise_id') is None: continue
         A = agg[(w, r['franchise_id'])]; sn = n(r.get('snap_counts_run_block')); A['rbSn'] += sn
@@ -101,6 +106,14 @@ for w in weeks:
     for k in [k for k in agg if k[0] == w and seen.get(k[1], 0) > 1]: del agg[k]     # two games in one PFF week: ambiguous, skip
 
 def r3(x): return None if x is None else round(x, 3)
+# league-average true-pass-set share of OL pass-block snaps (matched team-games only)
+_m = [A for k, A in agg.items() if k in GAME and A['pbSn'] > 0]
+LS = sum(A['tpsSn'] for A in _m) / max(1.0, sum(A['pbSn'] for A in _m))
+def mixed(A, bad):
+    # bad(prefix) -> count on those snaps; returns per-snap rate re-weighted to the league true-pass-set share (None: fall back to raw)
+    ts, sn = A['tpsSn'], A['pbSn']
+    if ts <= 0 or ts >= sn: return None
+    return LS * bad('tps_') / ts + (1 - LS) * (bad('') - bad('tps_')) / (sn - ts)
 for v in D['boxscores'].values():
     for t in v:
         if t != 'driveChart': v[t].pop('line', None)
@@ -112,8 +125,13 @@ for (w, f), A in agg.items():
          'olPressures': A['pressures_allowed'], 'olSacks': A['sacks_allowed'], 'dlPressures': A['press']}
     if A['pbGs']: L['olPbGrade'] = r3(A['pbG'] / A['pbGs'])
     if A['pbSn']:
-        L['olPbe'] = r3(100 - 100 * (A['sacks_allowed'] + 0.75 * (A['hits_allowed'] + A['hurries_allowed'])) / A['pbSn'])
-        L['olPressPct'] = r3(100 * A['pressures_allowed'] / A['pbSn'])
+        pbe_bad = lambda q: A[q + 'sacks_allowed'] + 0.75 * (A[q + 'hits_allowed'] + A[q + 'hurries_allowed'])
+        L['olPbeRaw'] = r3(100 - 100 * pbe_bad('') / A['pbSn'])
+        L['olPressPctRaw'] = r3(100 * A['pressures_allowed'] / A['pbSn'])
+        L['olTpsShare'] = r3(100 * A['tpsSn'] / A['pbSn'])
+        mp, mb = mixed(A, lambda q: A[q + 'pressures_allowed']), mixed(A, pbe_bad)
+        L['olPressPct'] = r3(100 * mp) if mp is not None else L['olPressPctRaw']
+        L['olPbe'] = r3(100 - 100 * mb) if mb is not None else L['olPbeRaw']
     if A['rbGs']: L['olRbGrade'] = r3(A['rbG'] / A['rbGs'])
     if A['prGs']: L['dlPrGrade'] = r3(A['prG'] / A['prGs'])
     if A['opps']: L['dlPrwr'] = r3(100 * A['wins'] / A['opps'])
@@ -139,8 +157,9 @@ for gk, v in D['boxscores'].items():
         tot += 1
         if 'line' not in v[t]: miss += 1; missing.append(f'{gk}:{t}')
 D['meta']['lineStats'] = {'source': 'PFF player grades/charting (OL = T/G/C, DL = DI/ED), aggregated per game',
+                          'olSchemeAdjusted': {'stats': ['olPressPct', 'olPbe'], 'leagueTruePassSetShare': round(100 * LS, 1)},
                           'weeks': weeks, 'teamGames': tot, 'covered': tot - miss}
 open(DST, 'w').write(s[:a0] + json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/') + s[b0:])
-print(f'{LG}: PFF line data on {put} team-games; dashboard-team games covered {tot - miss}/{tot}; franchises mapped {len(FID)}')
+print(f'{LG}: league true-pass-set share {100 * LS:.1f}%; PFF line data on {put} team-games; dashboard-team games covered {tot - miss}/{tot}; franchises mapped {len(FID)}')
 if partial: print('  PFF charting incomplete (dropped):', ', '.join(partial))
 if missing: print('  missing:', ', '.join(missing[:40]) + (' ...' if len(missing) > 40 else ''))

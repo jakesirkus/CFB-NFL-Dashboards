@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 13 of 15 Week 9 games** (nfl_v44.html).
+State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 13 of 15 Week 9 games** (nfl_v45.html = v44 + scheme-adjusted OL stats; next NFL build: PREV=nfl_v45.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -207,3 +207,12 @@ Run the jsdom tests against `new/*/index.html` too. To switch over later: point 
 - NFL drive builder: order rows by game clock, score = running max in the unit, punt-return fumbles get a "Fumbled Punt" entry.
 - Points per opportunity = points on drives with a play inside the opponent 30, summed from box scores.
 - The user wants it correct first, and fast — reuse these scripts, don't rebuild from scratch; keep messages short.
+
+## OL scheme adjustment (Nov 11 2026)
+add_line_stats.py: olPressPct and olPbe are SCHEME-ADJUSTED - the rate on PFF true pass sets and on all other pass blocks
+(screens, play action, quick throws) re-weighted to the league-average true-pass-set share (NFL ~47%, CFB ~35%), so quick-game
+offenses (e.g. KC: 40% true pass sets, 8.7 pressures/100 on true sets) cannot hide their line. Raw values kept as olPressPctRaw /
+olPbeRaw, olTpsShare per game. Test (2026 wks 1-9/10): CFB scheme bias r 0.27 -> -0.01; NFL first->second half r 0.24 -> 0.30.
+Rejected: time-to-throw adjustment (PFF charges QB-caused pressures to the QB, so OL pressure rate is already ~uncorrelated with
+TTT), true-pass-set-only rates (too few snaps, less reliable), grade mix-adjustment (no gain), DL opponent-scheme adjustment (no gain).
+PFF cache also needs true_pass_set_* fields (pass_blocking facet has them).

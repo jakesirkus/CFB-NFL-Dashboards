@@ -41,8 +41,8 @@ JS = """
   var LN_TIP = { sackPct:'Sacks per dropback (OL: allowed; DL: generated)', lineYards:'Line yards per carry (OL: gained; DL: allowed)',
     stuffPct:'Runs stopped at or behind the line (OL: suffered; DL: made)', opportunityPct:'Runs gaining 4+ yards (OL: gained; DL: allowed)',
     powerPct:'3rd/4th-and-short run conversion rate (OL: converted; DL: allowed)',
-    olPbGrade:'PFF pass-block grade, OL snap-weighted', olPbe:'PFF pass-blocking efficiency: 100 - (sacks + 0.75 x hits/hurries) per 100 OL pass-block snaps',
-    olPressPct:'Pressures allowed by the OL per 100 OL pass-block snaps', olRbGrade:'PFF run-block grade, OL snap-weighted',
+    olPbGrade:'PFF pass-block grade, OL snap-weighted', olPbe:'PFF pass-blocking efficiency: 100 - (sacks + 0.75 x hits/hurries) per 100 OL pass-block snaps - scheme-adjusted: true dropbacks and quick-game/screen/play-action blocks re-weighted to the league-average mix, so an offense cannot hide its line with quick throws',
+    olPressPct:'Pressures charged to OL players (not the QB) per 100 OL pass-block snaps - scheme-adjusted: true dropbacks and quick-game/screen/play-action blocks re-weighted to the league-average mix, so an offense cannot hide its line with quick throws', olRbGrade:'PFF run-block grade, OL snap-weighted',
     dlPrGrade:'PFF pass-rush grade, DL/edge snap-weighted', dlPrwr:'PFF pass-rush win rate (DL + edge)', dlPressPct:'Pressures per 100 DL/edge pass-rush snaps',
     dlRdGrade:'PFF run-defense grade, DL/edge snap-weighted', dlStopPct:'Run stops per run-stop opportunity (DL + edge)' };
   var LN_UNITS = {
@@ -137,7 +137,12 @@ MT_TRENCH = """
   }"""
 for p in sys.argv[1:]:
     s = open(p).read()
-    if 'id="tabBtnLines"' in s: print(p, 'already patched'); continue
+    if 'id="tabBtnLines"' in s:
+        U = [("olPbe:'PFF pass-blocking efficiency: 100 - (sacks + 0.75 x hits/hurries) per 100 OL pass-block snaps',", "olPbe:'PFF pass-blocking efficiency: 100 - (sacks + 0.75 x hits/hurries) per 100 OL pass-block snaps - scheme-adjusted: true dropbacks and quick-game/screen/play-action blocks re-weighted to the league-average mix, so an offense cannot hide its line with quick throws',"), ("    olPressPct:'Pressures allowed by the OL per 100 OL pass-block snaps', ", "    olPressPct:'Pressures charged to OL players (not the QB) per 100 OL pass-block snaps - scheme-adjusted: true dropbacks and quick-game/screen/play-action blocks re-weighted to the league-average mix, so an offense cannot hide its line with quick throws', ")]
+        n0 = sum(s.count(a) for a, b in U)
+        for a, b in U: s = s.replace(a, b)
+        if n0: open(p, 'w').write(s)
+        print(p, 'already patched' + (' (tooltips upgraded: scheme-adjusted PBE / pressure rate)' if n0 else '')); continue
     assert 'id="tabBtnMatchup"' in s, (p, 'run patch_matchup_ui.py first')
     # --- tab ---
     m = re.search(r'(<button class="tab-btn" id="tabBtnMatchup"[^>]*>Matchup</button>)', s); assert m, (p, 'tab anchor')
