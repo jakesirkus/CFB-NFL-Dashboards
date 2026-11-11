@@ -5,6 +5,7 @@ Model, per stat m (game level, one row per team-game on offense; CFB: FBS-vs-FBS
   R_* = the user's power rating for that team for that game:  blend*(rating going into that week) + (1-blend)*(current)
   a_*, d_* = per-team offense / defense residuals (ridge-shrunk) = unit strengths the overall rating doesn't capture
 Opponent effect on an offensive game:  E = bDef*(R_def - avg) + d_def  (centred);  on a defensive game: bOff*(R_off - avg) + a_off.
+LINE stats (Lines tab, OL/DL composites): unit-only - the same model without the ratings terms (E = d_def / a_off, own CV lambda).
 Adjusted season value = season value on the page + [ mean over FBS games of (y - E)  -  mean over all games of y ]
 (so the page's own stat definitions are kept; FCS games and opponent strength are what change).
 usage: opp_adjust.py cfb|nfl IN.html OUT.html [--blend B] [--cv]      (--cv: choose blend/lambda by cross-validation and report)"""
@@ -178,11 +179,34 @@ LINE = {   # key: (side, recipe)     side 'off' = this team's OL, 'def' = this t
     'passRush': ('def', {'sackPct': 0.40, 'dlPrGrade': 0.20, 'dlPrwr': 0.25, 'dlPressPct': 0.15}),
     'runDef':   ('def', {'lineYards': 0.20, 'stuffPct': 0.12, 'opportunityPct': 0.10, 'powerPct': 0.08, 'dlRdGrade': 0.30, 'dlStopPct': 0.20}),
 }
+# Line stats are schedule-adjusted by UNIT only (Nov 11 2026, user): no power ratings - an OL is judged against what the defenses it
+# faced did to every other offense in that stat (opponent's shrunk per-unit effect d_def), a DL against the offenses it faced.
+# (The same stats inside the rushing composites above keep the ratings-based adjustment.)
+LINE_STATS = sorted({m for _, comp in LINE.values() for m in comp})
+# CFB keeps the ratings + shrunk unit correction for now: unit-only cross-validated worse there (0.889 vs 0.854) and, with
+# conferences barely connected, pulled tough-conference lines down 30+ spots (LSU, Oklahoma, Oregon). Override: --line-unit / --line-ratings
+LINE_UNIT = ('--line-unit' in args) or (LG == 'nfl' and '--line-ratings' not in args)
+ADJL, DELTAL, LAMU = ({}, {}, {}) if LINE_UNIT else (ADJ, delta, LAM)
+for m in (LINE_STATS if LINE_UNIT else []):
+    if m not in METRICS: continue
+    if m not in CVR.get('no ratings', {}):
+        CVR.setdefault('no ratings', {})[m] = list(cv(m, 0, False)); json.dump(CVR, open(os.path.join(HERE, f'ratings/{LG}_cv.json'), 'w'))
+    LAMU[m] = CVR['no ratings'][m][1]
+    beta = fit(FBS_ROWS[m], 0, LAMU[m], use_r=False)
+    effD = lambda r: beta[4 + N + IDX[r[3]]]; effO = lambda r: beta[4 + IDX[r[2]]]
+    rows = FBS_ROWS[m]; W = np.array([r[6] for r in rows])
+    cD = np.average([effD(r) for r in rows], weights=W); cO = np.average([effO(r) for r in rows], weights=W)
+    for t in TEAMS:
+        for side, own, eff, c in (('off', 2, effD, cD), ('def', 3, effO, cO)):
+            allr = [r for r in OBS[m] if r[own] == t]; fb = [r for r in allr if r[7]]
+            if not allr or not fb: continue
+            raw_all = np.average([r[5] for r in allr], weights=[r[6] for r in allr])
+            ADJL[(t, side, m)] = np.average([r[5] - (eff(r) - c) for r in fb], weights=[r[6] for r in fb]); DELTAL[(t, side, m)] = ADJL[(t, side, m)] - raw_all
 def zscore(comp, side):
     base = 1 if side == 'off' else -1; score = {t: 0.0 for t in TEAMS}
     for m, wt in comp.items():
         sgn = -base if m in LOW_BETTER_FOR_OFFENSE else base
-        vals = np.array([ADJ.get((t, side, m), np.nan) for t in TEAMS], float)
+        vals = np.array([ADJL.get((t, side, m), np.nan) for t in TEAMS], float)
         if np.all(np.isnan(vals)): continue
         mu_, sd_ = np.nanmean(vals), np.nanstd(vals)
         for t, v in zip(TEAMS, vals): score[t] += wt * (0.0 if np.isnan(v) or not sd_ else sgn * (v - mu_) / sd_)
@@ -198,14 +222,13 @@ def std(d):
 # overall DL = half team stats, half PFF players (unchanged)
 for key, a_, b_ in (('ol', 'passPro', 'runBlock'), ('dl', 'dlStats', 'dlPff')):
     za, zb = std(LS[a_]), std(LS[b_]); put_rank(key, {t: 0.5 * za[t] + 0.5 * zb[t] for t in TEAMS})
-LINE_STATS = sorted({m for _, comp in LINE.values() for m in comp})
 for t in TEAMS:
     lv = {}
     for m in LINE_STATS:
         e = {}
         for side, k in (('off', 'o'), ('def', 'd')):
-            if (t, side, m) in ADJ:
-                e[k + 'a'] = round(float(ADJ[(t, side, m)]), 3); e[k] = round(float(ADJ[(t, side, m)] - delta[(t, side, m)]), 3)
+            if (t, side, m) in ADJL:
+                e[k + 'a'] = round(float(ADJL[(t, side, m)]), 3); e[k] = round(float(ADJL[(t, side, m)] - DELTAL[(t, side, m)]), 3)
         if e: lv[m] = e
     TA[t]['lineVals'] = lv
 # ---------- strength of schedule: average blended opponent rating (games used by the adjustment), rank 1 = hardest ----------
@@ -229,7 +252,7 @@ D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the pow
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
                        'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
                        'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS,
-                       'line': {k: {'side': v[0], 'recipe': v[1]} for k, v in LINE.items()}, 'lowBetterForOffense': sorted(LOW_BETTER_FOR_OFFENSE)}
+                       'line': {k: {'side': v[0], 'recipe': v[1]} for k, v in LINE.items()}, 'lineAdj': ('unit-only (no power ratings)' if LINE_UNIT else 'power ratings + shrunk unit correction'), 'lowBetterForOffense': sorted(LOW_BETTER_FOR_OFFENSE)}
 js = json.dumps(D, separators=(',', ':'), ensure_ascii=False, allow_nan=False).replace('</', '<\\/')
 open(DST, 'w').write(s[:a0] + js + s[b0:])
 print(f'{LG}: opponent adjustment written (blend {BLEND}, {len(METRICS)} stats, {len(delta)} team-side deltas)')

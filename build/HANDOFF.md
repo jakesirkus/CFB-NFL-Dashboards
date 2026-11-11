@@ -219,3 +219,4 @@ PFF cache also needs true_pass_set_* fields (pass_blocking facet has them).
 OL sack weight (Nov 11 2026, user: sacks are mostly a QB stat): opp_adjust.py olStats = line yards 35%, stuff 21%, opportunity 17%,
 sack rate 15% (was 40%), power 12%; passPro = PB grade 30%, PBE 30%, pressure rate 20%, sack rate 20% (was 50%). DL recipes unchanged.
 Overall OL (Nov 11 2026) = 50% Pass Pro + 50% Run Block (standardized), replacing half team stats / half PFF; olStats / olPff kept as reference columns. DL overall unchanged (dlStats / dlPff).
+Line schedule adjustment (Nov 11 2026): NFL OL/DL stats are UNIT-ONLY (opponent unit effect, no power ratings); CFB keeps ratings + shrunk unit correction (unit-only CV 0.889 vs 0.854 and conference isolation dropped SEC lines 30+ spots) pending the user. opp_adjust.py --line-unit / --line-ratings override.
