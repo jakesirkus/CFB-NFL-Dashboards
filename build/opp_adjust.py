@@ -194,7 +194,9 @@ LS = {}
 for key, (side, comp) in LINE.items(): LS[key] = zscore(comp, side); put_rank(key, LS[key])
 def std(d):
     v = np.array(list(d.values())); sd = v.std() or 1.0; mu = v.mean(); return {t: (x - mu) / sd for t, x in d.items()}
-for key, a_, b_ in (('ol', 'olStats', 'olPff'), ('dl', 'dlStats', 'dlPff')):    # overall OL / DL = half team stats, half PFF players
+# overall OL = half Pass Pro, half Run Block (Nov 11 2026: with sack rate cut to 15%, the team-stats half was ~85% run game);
+# overall DL = half team stats, half PFF players (unchanged)
+for key, a_, b_ in (('ol', 'passPro', 'runBlock'), ('dl', 'dlStats', 'dlPff')):
     za, zb = std(LS[a_]), std(LS[b_]); put_rank(key, {t: 0.5 * za[t] + 0.5 * zb[t] for t in TEAMS})
 LINE_STATS = sorted({m for _, comp in LINE.values() for m in comp})
 for t in TEAMS:
