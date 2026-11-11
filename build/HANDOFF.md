@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 13 of 15 Week 9 games** (nfl_v45.html = v44 + scheme-adjusted OL stats; next NFL build: PREV=nfl_v45.html).
+State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-8 + 13 of 15 Week 9 games** (nfl_v46.html = v44 + scheme-adjusted OL stats + unit/QB schedule adjustment, ratings thru Wk 9; next NFL build: PREV=nfl_v46.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -220,3 +220,13 @@ OL sack weight (Nov 11 2026, user: sacks are mostly a QB stat): opp_adjust.py ol
 sack rate 15% (was 40%), power 12%; passPro = PB grade 30%, PBE 30%, pressure rate 20%, sack rate 20% (was 50%). DL recipes unchanged.
 Overall OL (Nov 11 2026) = 50% Pass Pro + 50% Run Block (standardized), replacing half team stats / half PFF; olStats / olPff kept as reference columns. DL overall unchanged (dlStats / dlPff).
 Line schedule adjustment (Nov 11 2026): NFL OL/DL stats are UNIT-ONLY (opponent unit effect, no power ratings); CFB keeps ratings + shrunk unit correction (unit-only CV 0.889 vs 0.854 and conference isolation dropped SEC lines 30+ spots) pending the user. opp_adjust.py --line-unit / --line-ratings override.
+
+## NFL schedule adjustment = unit + QB (Nov 11 2026, user)
+opp_adjust.py (LG nfl, UNIT_QB): every stat adjusted by the opposing UNIT only (team stats, ridge-shrunk, lambda from CV 'no ratings').
+QB adjustments only change the opponent OFFENSE in that game: points x CONV[m] (= bOff from a fit with week-of-game ratings);
+defenses never touched; offense-side stats unaffected. Sources: read_ratings.py nfl -> ratings/nfl.json 'qbGames' (Weekly Games
+'Injury Adj' with |adj| > 2, all QB per user; + = helps home -> away team shorthanded) and 'qbSeason' from PRIVATE ratings/nfl_qb.json
+(git-ignored; currently PHI from Wk 7 -5, Hurts). Overall SOS = opponent week-of-game rating (+ game QB adj). Meta publishes QB team/week only, no points.
+Rationale: CV with week-of-game ratings ~ unit-only (0.975 vs 0.978); 'current rating' blends looked better only via hindsight.
+Pending user confirmation: BAL Wk 8 -6, IND Wk 8 -3, NYG Wk 2 -3.7 rating drops (QB?) and BAL Wk 9 (-4.5 game adj on top of -6 drop).
+CFB unchanged (ratings blend 0.25 + unit correction).

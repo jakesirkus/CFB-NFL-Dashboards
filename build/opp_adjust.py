@@ -45,14 +45,14 @@ for gk, v in D['boxscores'].items():
             if y is None or not w: continue
             OBS[m].append((gk, b['meta']['week'], t, o, 1 if b['meta']['home'] else -1, float(y), float(w), fbs))
 
-def fit(rows, blend, lam, use_r=True):
-    """weighted ridge; returns (mu, bOff, bDef, h, a[N], d[N])"""
+def fit(rows, blend, lam, use_r=True, rf=None, off=None):
+    """weighted ridge; returns (mu, bOff, bDef, h, a[N], d[N]).  rf(team, week): rating override; off(row): known offset removed from y"""
     n = len(rows); P = 4 + 2 * N
     X = np.zeros((n, P)); y = np.zeros(n); w = np.zeros(n)
     for i, (gk, wk, t, o, hm, yy, ww, _) in enumerate(rows):
         X[i, 0] = 1; X[i, 3] = hm
-        if use_r: X[i, 1] = rating(t, wk, blend); X[i, 2] = rating(o, wk, blend)
-        X[i, 4 + IDX[t]] = 1; X[i, 4 + N + IDX[o]] = 1; y[i] = yy; w[i] = ww
+        if use_r: X[i, 1] = rf(t, wk) if rf else rating(t, wk, blend); X[i, 2] = rf(o, wk) if rf else rating(o, wk, blend)
+        X[i, 4 + IDX[t]] = 1; X[i, 4 + N + IDX[o]] = 1; y[i] = yy - (off(rows[i]) if off else 0.0); w[i] = ww
     sw = np.sqrt(w); A = X * sw[:, None]; z = y * sw
     pen = np.zeros(P); pen[4:] = lam
     if not use_r: pen[1:3] = 1e9
@@ -105,10 +105,30 @@ for m in METRICS:                     # a stat added after the last --cv run: cr
 LAM = {m: CVR[_key][m][1] for m in METRICS}
 ADJ = {}                              # (team, side, stat) -> opponent-adjusted FBS-games value at box level (for the composite ranks)
 delta = {}; betas = {}
+# NFL (Nov 11 2026, user): every stat is schedule-adjusted by the opposing UNIT only (team stats, no power ratings), and the user's QB
+# adjustments only change how strong an opponent OFFENSE was that game (a defense that faced a backup QB gets less credit; defenses are
+# never touched).  QB points -> stat units via bOff from a game-week-ratings fit (what one rating point of a team is worth in that stat).
+# Week-of-game ratings are used for the overall SOS.  Ratings-vs-unit CV with week-of-game ratings: 0.975 vs 0.978 (a tie).
+UNIT_QB = LG == 'nfl'
+QBW, QBS = {}, {}
+for q in RT.get('qbGames', []): QBW[(q['team'], q['week'])] = QBW.get((q['team'], q['week']), 0.0) + q['points']
+for q in RT.get('qbSeason', []):
+    for w_ in range(int(q['fromWeek']), 40): QBS[(q['team'], w_)] = QBS.get((q['team'], w_), 0.0) + q['points']
+def qb_pts(t, wk): return QBW.get((t, wk), 0.0) + QBS.get((t, wk), 0.0)          # this game's QB hit to t's offense (<= 0)
+def game_rating(t, wk): return rating(t, wk, 1.0) + QBW.get((t, wk), 0.0)        # week-of-game rating (season drops already in it)
+CONV = {}
 for m in METRICS:
-    beta = fit(FBS_ROWS[m], BLEND, LAM[m]); betas[m] = (round(float(beta[1]), 5), round(float(beta[2]), 5))
-    effD = lambda r: beta[2] * rating(r[3], r[1], BLEND) + beta[4 + N + IDX[r[3]]]       # what this offense's opponent (defense) does to y
-    effO = lambda r: beta[1] * rating(r[2], r[1], BLEND) + beta[4 + IDX[r[2]]]           # what this defense's opponent (offense) does to y
+    if UNIT_QB:
+        cb = fit(FBS_ROWS[m], 1.0, LAM[m], rf=game_rating); CONV[m] = float(cb[1])      # stat per rating point of the offense
+        lu = CVR.get('no ratings', {}).get(m, [None, LAM[m]])[1]
+        offq = lambda r, k=CONV[m]: k * qb_pts(r[2], r[1])
+        beta = fit(FBS_ROWS[m], 0, lu, use_r=False, off=offq); betas[m] = (round(CONV[m], 5), 0.0)
+        effD = lambda r: beta[4 + N + IDX[r[3]]]                                          # the defense this offense faced
+        effO = lambda r, k=CONV[m]: beta[4 + IDX[r[2]]] + k * qb_pts(r[2], r[1])           # the offense this defense faced, incl. its QB that day
+    else:
+        beta = fit(FBS_ROWS[m], BLEND, LAM[m]); betas[m] = (round(float(beta[1]), 5), round(float(beta[2]), 5))
+        effD = lambda r: beta[2] * rating(r[3], r[1], BLEND) + beta[4 + N + IDX[r[3]]]       # what this offense's opponent (defense) does to y
+        effO = lambda r: beta[1] * rating(r[2], r[1], BLEND) + beta[4 + IDX[r[2]]]           # what this defense's opponent (offense) does to y
     rows = FBS_ROWS[m]; W = np.array([r[6] for r in rows])
     cD = np.average([effD(r) for r in rows], weights=W); cO = np.average([effO(r) for r in rows], weights=W)
     for t in TEAMS:
@@ -185,9 +205,9 @@ LINE = {   # key: (side, recipe)     side 'off' = this team's OL, 'def' = this t
 LINE_STATS = sorted({m for _, comp in LINE.values() for m in comp})
 # CFB keeps the ratings + shrunk unit correction for now: unit-only cross-validated worse there (0.889 vs 0.854) and, with
 # conferences barely connected, pulled tough-conference lines down 30+ spots (LSU, Oklahoma, Oregon). Override: --line-unit / --line-ratings
-LINE_UNIT = ('--line-unit' in args) or (LG == 'nfl' and '--line-ratings' not in args)
-ADJL, DELTAL, LAMU = ({}, {}, {}) if LINE_UNIT else (ADJ, delta, LAM)
-for m in (LINE_STATS if LINE_UNIT else []):
+LINE_UNIT = ('--line-unit' in args) or UNIT_QB
+ADJL, DELTAL, LAMU = ({}, {}, {}) if (LINE_UNIT and not UNIT_QB) else (ADJ, delta, LAM)     # NFL: every stat is already unit + QB
+for m in (LINE_STATS if (LINE_UNIT and not UNIT_QB) else []):
     if m not in METRICS: continue
     if m not in CVR.get('no ratings', {}):
         CVR.setdefault('no ratings', {})[m] = list(cv(m, 0, False)); json.dump(CVR, open(os.path.join(HERE, f'ratings/{LG}_cv.json'), 'w'))
@@ -234,7 +254,7 @@ for t in TEAMS:
 # ---------- strength of schedule: average blended opponent rating (games used by the adjustment), rank 1 = hardest ----------
 SOS = {}
 for t in TEAMS:
-    rs = [rating(r[3], r[1], BLEND) + CUR_MEAN for r in FBS_ROWS['epaPlay'] if r[2] == t]
+    rs = [(game_rating(r[3], r[1]) if UNIT_QB else rating(r[3], r[1], BLEND)) + CUR_MEAN for r in FBS_ROWS['epaPlay'] if r[2] == t]
     if rs: SOS[t] = float(np.mean(rs))
 for i, t in enumerate(sorted(SOS, key=lambda u: -SOS[u])): TA[t]['sos'] = {'avgOppRating': round(SOS[t], 2), 'rank': i + 1}
 # ---------- unit strength of schedule: how good were the opponents' offenses / defenses / rush & pass units ----------
@@ -248,8 +268,13 @@ for cat, key in UNIT_CATS.items():
     for i, t in enumerate(sorted(avg, key=lambda u: -avg[u][0])):           # higher opponent score = tougher
         TA[t].setdefault('sosUnits', {'games': len(OPPS[t])})[cat] = {'rank': i + 1, 'avgOppRank': round(avg[t][1], 1)}
 D['teamsAdj'] = TA
-D['meta']['oppAdj'] = {'blend': BLEND, 'note': ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
-                       'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else '')),
+D['meta']['oppAdj'] = {'blend': BLEND, 'note': (('Schedule-adjusted by opposing unit: each stat is judged against what the units a team faced did to everyone else '
+                       '(team stats, shrunk). An opponent offense missing its starting QB counts as weaker that game (the user\'s QB adjustments), so defenses that '
+                       'faced a backup get less credit. Strength of schedule uses each opponent\'s power rating from the week of the game.') if UNIT_QB else
+                       ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
+                       'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else ''))),
+                       'method': 'unit+qb' if UNIT_QB else 'ratings+unit', 'qbAdjustments': ({'games': [{'week': q['week'], 'team': q['team']} for q in RT.get('qbGames', [])],          # no point values (private ratings)
+                                          'season': [{'team': q['team'], 'fromWeek': q['fromWeek']} for q in RT.get('qbSeason', [])]} if UNIT_QB else None),
                        'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
                        'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS,
                        'line': {k: {'side': v[0], 'recipe': v[1]} for k, v in LINE.items()}, 'lineAdj': ('unit-only (no power ratings)' if LINE_UNIT else 'power ratings + shrunk unit correction'), 'lowBetterForOffense': sorted(LOW_BETTER_FOR_OFFENSE)}

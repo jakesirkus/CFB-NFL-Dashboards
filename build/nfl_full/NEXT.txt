@@ -1,6 +1,6 @@
-Published NFL v44 = nfl_v44.html (Weeks 1-8 + 13 of 15 Week 9 games; Nov 8, 2026).
+Published NFL = nfl_v46.html (Weeks 1-8 + 13 of 15 Week 9 games; unit + QB schedule adjustment, ratings thru Wk 9; Nov 11, 2026). Next build: PREV=nfl_v46.html.
 Template = live_v24.html (assemble_nfl.py applies all UI patches: toggle, rankings, schedule, matchup, lines, early-down SR, off-schedule, big plays).
 Update: curl nflverse play_by_play_2026.csv.gz -> read_csv -> to_pickle /home/claude/data/pbp_newN.pkl ; python3 -I ../pff_fetch.py nfl 2026 <week>
-PREV=nfl_v44.html FULLWEEK=15 python3 -I assemble_nfl.py PBP.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7 8 9
+PREV=nfl_v46.html FULLWEEK=15 python3 -I assemble_nfl.py PBP.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7 8 9
 Checks: check_nfl_scores.py out.json pbp.pkl ; check_nfl_charts.py out.json ; node ../verify_nfl5.js out.html
 Compare earlier weeks' drive charts vs the previous build (extract the dashboard-data block).

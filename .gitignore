@@ -13,3 +13,4 @@ build/ratings/nfl.json
 build/ratings/cfb.json
 *.xlsx
 build/pff/raw/
+build/ratings/nfl_qb.json
