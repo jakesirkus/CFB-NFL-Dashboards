@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-10 + 66 of 67 Week 11 games (all but Ole Miss-Oklahoma, Sun) — `out9`** (rebuild_w11.sh, out8 -> out9; late games: append plays to combined_raw_w1_11.pkl, ids to w11_gids.txt + official_finals.json, rerun). **NFL Weeks 1-9 + Week 10 TNF** (nfl_v47.html: Weeks 1-9 complete + Week 10 TNF; next NFL build: PREV=nfl_v47.html FULLWEEK=14).
+State (Nov 8, 2026): **CFB Weeks 1-11 (all 67 Week 11 games) — `out9`; Predictions = Week 12 (opener = Sunday Nov 15 DK snapshot)** (rebuild_w11.sh, out8 -> out9; late games: append plays to combined_raw_w1_11.pkl, ids to w11_gids.txt + official_finals.json, rerun). **NFL Weeks 1-9 + Week 10 TNF** (nfl_v47.html: Weeks 1-9 complete + Week 10 TNF; next NFL build: PREV=nfl_v47.html FULLWEEK=14).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -236,4 +236,4 @@ rebuild_w11.sh (out8 -> out9). Inputs: /home/claude/data/cfbd/w11 (games_w11.jso
 Fixes: score_overrides (Memphis re-kicked PAT, Boise pick-six 2-pt, Missouri St OT pick-six no try, Cincinnati / Northwestern TD no try,
 Coastal missing TD on 'Sack' row, WKU final-play TD per official 34-24); flag_overrides (BC + Arkansas St sack-fumble TDs = lost fumbles);
 chart_overrides Week 11 block (defensive-TD labels, ND muffed punt, WKU final-play TD drive, USM-La Tech clock tags).
-Ratings reloaded from the Nov 13 workbook (through Week 10). Predictions still Week 11 (PRED_WEEK=12 once Week 12 lines + Sunday snapshot exist).
+Ratings reloaded from the Nov 13 workbook (through Week 10). Predictions Week 12 (rebuild_w11.sh PW default 12; lines_w12_open.json = Sun Nov 15 5:15 PM ET DK snapshot).

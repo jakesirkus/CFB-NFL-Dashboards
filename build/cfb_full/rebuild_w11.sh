@@ -27,6 +27,6 @@ python3 -I ../add_line_stats.py cfb out9/index.html out9/index.html
 python3 -I ../opp_adjust.py cfb out9/index.html out9/index.html --blend 0.25
 # Predictions tab (Nov 8 2026; opener + line-move columns Nov 9): user's power ratings vs the market for the UPCOMING week (public, user's call). Refresh the inputs first:
 #   CFBD /games?year=2026&week=$PW -> /home/claude/data/cfbd/games_w$PW.json, /lines?year=2026&week=$PW -> lines_w$PW.json
-PW=${PRED_WEEK:-11}
+PW=${PRED_WEEK:-12}
 python3 -I ../patch_predictions_ui.py out9/index.html
 python3 -I ../add_predictions.py out9/index.html $PW /home/claude/data/cfbd/games_w$PW.json /home/claude/data/cfbd/lines_w$PW.json /home/claude/data/cfbd/lines_w${PW}_open.json   # opener = Sunday snapshot
