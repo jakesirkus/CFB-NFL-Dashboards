@@ -262,6 +262,10 @@ def fix(gk, ch):
         if y['team'] == 'Southern Miss' and y['result'] == 'Interception' and y['t1'] == '11:42': y.update({'t1': '12:46', 't2': '12:46'})
         z = get(ch, 27)
         if z['team'] == 'Southern Miss' and z['result'] == 'Touchdown' and z['t1'] == '11:42' and z['plays'] <= 2: z['t1'] = '12:46'
+    elif gk == '11_401860915':   # Utah St - SDSU: SDSU's punt as Q1 expired is tagged (00:00) and sorted first, so the drive showed 15:00 -> 0:03
+        x = get(ch, 4)
+        if x['team'] == 'San Diego State' and x['t1'] == '15:00' and x['playList'] and x['playList'][0]['text'].startswith('(00:00)'):
+            x['playList'].append(x['playList'].pop(0)); x.update({'t1': '2:05', 't2': '0:00'})
     infer_missing_endings(gk, ch)
     return renum(ch)
 
