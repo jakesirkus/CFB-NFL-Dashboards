@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-10 — `out8`** (all 63 Week 10 FBS-involved games). **NFL Weeks 1-9 + Week 10 TNF** (nfl_v47.html: Weeks 1-9 complete + Week 10 TNF; next NFL build: PREV=nfl_v47.html FULLWEEK=14).
+State (Nov 8, 2026): **CFB Weeks 1-10 + 60 of 67 Week 11 games — `out9`** (rebuild_w11.sh, out8 -> out9; late games: append plays to combined_raw_w1_11.pkl, ids to w11_gids.txt + official_finals.json, rerun). **NFL Weeks 1-9 + Week 10 TNF** (nfl_v47.html: Weeks 1-9 complete + Week 10 TNF; next NFL build: PREV=nfl_v47.html FULLWEEK=14).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -230,3 +230,10 @@ defenses never touched; offense-side stats unaffected. Sources: read_ratings.py 
 Rationale: CV with week-of-game ratings ~ unit-only (0.975 vs 0.978); 'current rating' blends looked better only via hindsight.
 Pending user confirmation: BAL Wk 8 -6, IND Wk 8 -3, NYG Wk 2 -3.7 rating drops (QB?) and BAL Wk 9 (-4.5 game adj on top of -6 drop).
 CFB unchanged (ratings blend 0.25 + unit correction).
+
+## CFB Week 11 (Nov 15 2026)
+rebuild_w11.sh (out8 -> out9). Inputs: /home/claude/data/cfbd/w11 (games_w11.json, plays_w11.json), combined_raw_w1_11.pkl, w11_gids.txt.
+Fixes: score_overrides (Memphis re-kicked PAT, Boise pick-six 2-pt, Missouri St OT pick-six no try, Cincinnati / Northwestern TD no try,
+Coastal missing TD on 'Sack' row, WKU final-play TD per official 34-24); flag_overrides (BC + Arkansas St sack-fumble TDs = lost fumbles);
+chart_overrides Week 11 block (defensive-TD labels, ND muffed punt, WKU final-play TD drive, USM-La Tech clock tags).
+Ratings reloaded from the Nov 13 workbook (through Week 10). Predictions still Week 11 (PRED_WEEK=12 once Week 12 lines + Sunday snapshot exist).

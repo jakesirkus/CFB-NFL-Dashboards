@@ -231,6 +231,37 @@ def fix(gk, ch):
             x['playList'].append({'q': 1, 'text': 'UConn punt (missing from the play-by-play feed) - North Carolina took over at its own 3 with 3:40 left in the 1st quarter.', 'scoring': False, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None})
             nx = get(ch, 7)
             if nx['team'] == 'North Carolina' and nx['how'] == 'KO': nx['how'] = 'PUNT'
+    # ---------------- Week 11 ----------------
+    elif gk == '11_401869937':   # Arkansas St - Coastal: CFBD drive result 'FUMBLE TD' - Coastal returned an Arkansas St fumble for a TD (play missing; only the PAT row is in the feed)
+        x = get(ch, 19)
+        if x['team'] == 'Arkansas State' and x['result'] in ('Touchdown', 'Fumble'):
+            x.update({'result': 'Fumble (Defensive TD)', 'color': 'red', 'scored': False})
+            if get(ch, 20)['how'] == 'FUMB': get(ch, 20)['how'] = 'KO'
+            x['playList'].insert(len(x['playList']) - 1, {'q': 3, 'text': 'Arkansas State fumble returned for a Coastal Carolina touchdown (the play is missing from the play-by-play feed; CFBD drive result FUMBLE TD, Coastal 14 -> 21).', 'scoring': True, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None})
+    elif gk == '11_401858294':   # BC - Notre Dame: McKenzie's sack-fumble returned by J.Sneed for a Notre Dame TD; ND's muffed punt recovered by BC
+        x = get(ch, 9)
+        if x['team'] == 'Boston College' and x['result'] in ('Touchdown', 'Fumble'):
+            x.update({'result': 'Fumble (Defensive TD)', 'color': 'red', 'scored': False})
+            if get(ch, 10)['how'] == 'FUMB': get(ch, 10)['how'] = 'KO'
+        y = get(ch, 11)
+        if y['team'] == 'Notre Dame' and y['result'] == 'Fumble' and 'muff' not in y['playText'].lower() and 'fumbled by #6 J.Faison' in y['playText']:
+            y.update({'result': 'Muffed Punt'})
+    elif gk == '11_401870752':   # JSU - WKU: official 34-24 (WKU 14-7-0-13); WKU's last 6 points came on the final kickoff return, which the feed omits
+        x = get(ch, 24)
+        if x['team'] == 'Western Kentucky' and x['result'] == 'Touchdown' and x['teamScore'] == 34 and len(ch) == 24:
+            x.update({'teamScore': 28, 'oppScore': 24})
+            t = 'Final play (missing from the play-by-play feed): Western Kentucky scored a touchdown on the last kickoff return play after its go-ahead TD - official final 34-24 (CFBD line score WKU 14-7-0-13).'
+            ch.append({'team': 'Jacksonville State', 'opponent': 'Western Kentucky', 'q1': 4, 't1': '0:01', 'spot1': None, 'q2': 4, 't2': '0:00', 'spot2': None,
+                       'plays': 0, 'yards': 0, 'top': '0:00', 'result': 'Defensive TD (final play)', 'color': 'red', 'clickable': True, 'opp30': False,
+                       'playText': t, 'teamScore': 24, 'oppScore': 34, 'scored': False, 'n': 0, 'how': 'KO',
+                       'playList': [{'q': 4, 'text': t, 'scoring': True, 'penalty': False, 'down': None, 'distance': None, 'goalToGo': False, 'yardline100': None}]})
+    elif gk == '11_401871099':   # USM - La Tech: feed clock tags out of order - La Tech's TD drive followed USM's FG at 5:28 (TD at 4:10); USM's INT at 12:46 of the 4th
+        x = get(ch, 6)
+        if x['team'] == 'Louisiana Tech' and x['t1'] == '2:59': x.update({'t1': '5:28', 't2': '4:10'})
+        y = get(ch, 25)
+        if y['team'] == 'Southern Miss' and y['result'] == 'Interception' and y['t1'] == '11:42': y.update({'t1': '12:46', 't2': '12:46'})
+        z = get(ch, 27)
+        if z['team'] == 'Southern Miss' and z['result'] == 'Touchdown' and z['t1'] == '11:42' and z['plays'] <= 2: z['t1'] = '12:46'
     infer_missing_endings(gk, ch)
     return renum(ch)
 

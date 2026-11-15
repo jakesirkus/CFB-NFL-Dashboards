@@ -65,5 +65,15 @@
   "fum_lost": true,
   "giveaway": true,
   "why": "FIU-Missouri St wk10: FIU QB Kohl was sacked and fumbled; Missouri State's J.Cooper recovered and scored (feed row has no giveaway flag) - an FIU lost fumble"
+ },
+ "401858294326": {
+  "fum_lost": true,
+  "giveaway": true,
+  "why": "BC-Notre Dame wk11: McKenzie sacked and fumbled at the BC 1, ND's J.Sneed recovered and returned it for a TD (feed counted it as BC's own recovery) - a BC lost fumble"
+ },
+ "401869937521": {
+  "fum_lost": true,
+  "giveaway": true,
+  "why": "Arkansas St-Coastal wk11: this 'Sack' row (text overwritten by the PAT) is the Arkansas St sack-fumble Coastal returned for a TD (CFBD drive result FUMBLE TD, 14 -> 21) - an Arkansas St lost fumble"
  }
 }

@@ -173,5 +173,72 @@
    ]
   ],
   "why": "WKU-MTSU wk10: feed ends at 45-42 after the 48-yd FG with 0:01; CFBD official line score MTSU 14-7-14-16 = 51 (WKU 0-13-14-15 = 42), so MTSU scored a 6-pt TD on the final play (no try) that the feed omits. Attached to the FG row. Official 51-42 MTSU (CFBD)."
+ },
+ "401862824745": {
+  "events": [
+   [
+    "Memphis",
+    7
+   ]
+  ],
+  "why": "Memphis-USF wk11: blocked PAT wiped out by USF offside (NO PLAY), re-kick good - feed 38->45. Official 52-41 Memphis (CFBD)."
+ },
+ "401860914177": {
+  "events": [
+   [
+    "Boise State",
+    8
+   ]
+  ],
+  "why": "Oregon St-Boise St wk11: T.Anderson 58-yd pick-six, then a 2-pt conversion the text omits - feed Boise 7->15. Official 46-41 Boise State (CFBD)."
+ },
+ "401870796808": {
+  "events": [
+   [
+    "Missouri State",
+    6
+   ]
+  ],
+  "why": "NMSU-Missouri St wk11: J.Boamah interception return TD in overtime ends the game, no try - feed 21->27. Official 27-21 Missouri State (CFBD)."
+ },
+ "401856859349": {
+  "events": [
+   [
+    "Cincinnati",
+    6
+   ]
+  ],
+  "why": "Cincinnati-Iowa St wk11: Henry-to-French 12-yd TD pass with no successful try - feed 7->13. Official 41-13 Iowa State (CFBD)."
+ },
+ "401858522722": {
+  "events": [
+   [
+    "Northwestern",
+    6
+   ]
+  ],
+  "why": "Northwestern-Ohio St wk11: Marchiol 17-yd TD pass with 0:00 left, no try - feed 13->19. Official 28-19 Ohio State (CFBD)."
+ },
+ "401869937521": {
+  "events": [
+   [
+    "Coastal Carolina",
+    7
+   ]
+  ],
+  "why": "Arkansas St-Coastal wk11: the Q3 Coastal TD play is missing from the feed; only the PAT row (typed 'Sack') remains - feed 14->21. Official 28-21 Coastal Carolina (CFBD)."
+ },
+ "401870752709": {
+  "events": [
+   [
+    "Western Kentucky",
+    7
+   ],
+   [
+    "Western Kentucky",
+    6
+   ]
+  ],
+  "why": "JSU-WKU wk11: official line score WKU 14-7-0-13 = 34 (JSU 24), but the feed ends 28-24 after WKU's TD with 0:01 and the 0:02 kickoff; WKU's other 6 points came on the final kickoff return, which the feed omits. Attached to the TD row (same possession, as with MTSU wk10) so the drive chart final matches; chart_overrides splits it into the final-play TD. Official 34-24 WKU (CFBD)."
  }
 }
