@@ -74,7 +74,10 @@ def build_drives(g):
         rows=rows.assign(_gs=rows.game_seconds_remaining.ffill().bfill()).sort_values(['_gs','play_id'],ascending=[False,True],kind='mergesort')
         pr=rows[rows.play_type.notna()]
         if len(pr)==0: continue
-        team=rows.posteam.dropna().iloc[0] if rows.posteam.notna().any() else None
+        # possession team = team on the first scrimmage snap (an onside kick the KICKING team recovers is filed with the receiving team as
+        # posteam, e.g. 2026_10_KC_ATL: ATL recovered its onside kick and kicked a FG, the drive showed as KC's); fall back to the first posteam
+        sc=rows[rows.is_scrim.fillna(False).astype(bool) & rows.posteam.notna()] if 'is_scrim' in rows else rows.iloc[0:0]
+        team=sc.posteam.iloc[0] if len(sc) else (rows.posteam.dropna().iloc[0] if rows.posteam.notna().any() else None)
         if team is None: continue
         opp=away if team==home else home
         # header info comes from the possession's own nflverse drive (a kickoff row can carry the previous drive's info)
