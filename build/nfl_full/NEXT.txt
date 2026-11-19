@@ -1,4 +1,4 @@
-Published NFL = nfl_v50.html (Weeks 1-9 + 13 of 14 Week 10 games, MNF LAC-BAL pending; pbp_new10d.pkl; Nov 16, 2026). Next build: PREV=nfl_v50.html FULLWEEK=14.
+Published NFL = nfl_v51.html (Weeks 1-10 complete; pbp_new10e.pkl; Nov 18, 2026). Next build: PREV=nfl_v51.html FULLWEEK=<games in week 11> ... 1..11.
 Template = live_v24.html (assemble_nfl.py applies all UI patches: toggle, rankings, schedule, matchup, lines, early-down SR, off-schedule, big plays).
 Update: curl nflverse play_by_play_2026.csv.gz -> read_csv -> to_pickle /home/claude/data/pbp_newN.pkl ; python3 -I ../pff_fetch.py nfl 2026 <week>
 PREV=nfl_v47.html FULLWEEK=14 python3 -I assemble_nfl.py PBP.pkl live_data.json live_v24.html out.html out.json 1 2 3 4 5 6 7 8 9 10
