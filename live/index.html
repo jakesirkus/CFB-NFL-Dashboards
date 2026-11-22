@@ -1,6 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Scores · CFB &amp; NFL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="nfl-box.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--bg:#0A0E16;--card:#111724;--card2:#161E2E;--line:#222C3E;--ink:#F3F5F9;--muted:#94A0B4;--accent:#FFB020;--live:#FF4D5E;--good:#3DDC97}
@@ -99,6 +100,11 @@ td:first-child,th:first-child{text-align:left}
 svg.wp{width:100%;height:170px;display:block}
 .back{margin-bottom:12px}
 @media (max-width:640px){h1{font-size:34px}.dteam img{width:36px;height:36px}.dteam .nm{font-size:18px}.dteam .sc{font-size:34px}.plays{padding-left:0}.plays li{grid-template-columns:1fr;gap:1px}.status{margin-left:0;width:100%}}
+.nbx-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:12px}
+.nbx-bar select{background:var(--card2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;font-size:13px}
+.nbx-bar label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.nbx-cav{font-size:12px;color:var(--muted);line-height:1.5;flex:1 1 320px}
+.nflbox .bs-drivechart{margin-top:14px}
 </style></head><body><div class="wrap">
 <header><div><div class="eyebrow">Live · auto-refreshing</div><h1>Live Scores</h1></div>
 <nav class="nav"><a href="../new/">Home</a><a href="../new/nfl/">NFL dashboard</a><a href="../new/cfb/">CFB dashboard</a></nav></header>
@@ -112,13 +118,15 @@ svg.wp{width:100%;height:170px;display:block}
 <main id="main"><div class="empty">Loading games…</div></main>
 <p class="note">Data: ESPN's public scoreboard and game feeds (the same source SportsDataverse uses). Live numbers are unofficial and can lag the broadcast by 10–60 seconds; the weekly dashboards remain the verified record.</p>
 </div>
+<script src="nfl-boxrender.js"></script>
+<script src="nfl-box.js"></script>
 <script>
 (()=>{
 'use strict';
 const API='https://site.api.espn.com/apis/site/v2/sports/football/';
 const LG={nfl:{path:'nfl',extra:'',maxWk:18},cfb:{path:'college-football',extra:'groups=80&limit=300',maxWk:16}};
 const POLL_LIVE=20000, POLL_DETAIL=15000, POLL_IDLE=300000;
-const S={lg:'nfl',week:null,seasontype:null,curWeek:null,events:[],game:null,summary:null,tab:'plays',open:new Set(),seenPlays:new Set(),q:'',timer:null,lastOk:null,busy:false};
+const S={lg:'nfl',week:null,seasontype:null,curWeek:null,events:[],game:null,summary:null,tab:'plays',period:'full',dcOpen:new Set(),open:new Set(),seenPlays:new Set(),q:'',timer:null,lastOk:null,busy:false};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
@@ -134,7 +142,8 @@ function sumURL(id){return API+LG[S.lg].path+'/summary?event='+encodeURIComponen
 
 /* ---------- routing: #nfl, #cfb/401873074, #nfl/w12 ---------- */
 function readHash(){const h=location.hash.replace(/^#/,'').split('/');S.lg=h[0]==='cfb'?'cfb':'nfl';S.game=null;S.week=null;
- for(const p of h.slice(1)){if(/^w\d+$/.test(p))S.week=+p.slice(1);else if(/^\d+$/.test(p))S.game=p}}
+ for(const p of h.slice(1)){if(/^w\d+$/.test(p))S.week=+p.slice(1);else if(/^\d+$/.test(p))S.game=p}
+ S.tab=S.lg==='nfl'?'nflbox':'plays';S.period='full'}
 function writeHash(){let h='#'+S.lg;if(S.week!=null&&!S.game)h+='/w'+S.week;if(S.game)h+='/'+S.game;if(location.hash!==h)history.pushState(null,'',h)}
 
 /* ---------- scoreboard ---------- */
@@ -219,14 +228,33 @@ function renderDetail(){
  if(live){const lp=sit.lastPlay;const wp=lp?.probability;const possT=[away,home].find(c=>c.team.id===sit.possession);
   sitHTML=`<div class="sitbox">${possT?`<span>Ball: <b>${esc(possT.team.abbreviation)}</b></span>`:''}${sit.downDistanceText?`<span><b>${esc(sit.downDistanceText)}</b></span>`:''}${sit.isRedZone?'<span style="color:var(--live)">Red zone</span>':''}${wp?`<span>Win prob: ${esc(away.team.abbreviation)} ${pct(wp.awayWinPercentage)} · ${esc(home.team.abbreviation)} ${pct(wp.homeWinPercentage)}</span>`:''}</div>${lp?.text?`<div class="note" style="text-align:center">Last play: ${esc(lp.text)}</div>`:''}`}
  const head=`<div class="dhead"><div class="dscore">${tm(away)}<div class="dmid"><b class="${live?'lv':''}">${esc(st.shortDetail||st.detail||'')}</b>${esc(sum.gameInfo?.venue?.fullName||'')}</div>${tm(home)}</div>${ls}${sitHTML}</div>`;
- const tabs=[['plays','Play-by-play'],['box','Team stats'],['leaders','Leaders'],['wp','Win prob']];
+ const tabs=S.lg==='nfl'?[['nflbox','Box score'],['plays','Play-by-play'],['leaders','Leaders'],['wp','Win prob']]:[['plays','Play-by-play'],['box','Team stats'],['leaders','Leaders'],['wp','Win prob']];
  const tabHTML=`<div class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${n}</button>`).join('')}</div>`;
  let body='';
  if(S.tab==='plays')body=playsHTML(sum,away,home);
  else if(S.tab==='box')body=boxHTML(sum,away,home);
+ else if(S.tab==='nflbox')body=nflBoxHTML(sum,away,home);
  else if(S.tab==='leaders')body=leadersHTML(sum);
  else body=wpHTML(sum,away,home);
  $('#main').innerHTML=`<button class="btn back" data-back>&larr; All games</button>${head}${tabHTML}<div class="panel">${body}</div>`;
+ if(S.tab==='nflbox')S.dcOpen.forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=false});
+}
+/* ---------- NFL: dashboard-style live box score (nfl-box.js + verbatim dashboard renderer) ---------- */
+let NFL_MODEL=null;
+async function ensureModel(){if(NFL_MODEL||!window.NFLLiveBox)return;const m=await getJSON('nfl-model.json');NFL_MODEL=m;NFLLiveBox.setModel(m)}
+const PERIODS=[['full','Full game'],['q1','1st quarter'],['q2','2nd quarter'],['q3','3rd quarter'],['q4','4th quarter'],['h1','1st half'],['h2','2nd half'],['thru3','Through 3 quarters']];
+function nflBoxHTML(sum,away,home){
+ if(!window.NFLLiveBox||!window.NFLBoxRender)return '<div class="empty">Box score code didn’t load. Try refreshing.</div>';
+ if(!NFL_MODEL)return '<div class="empty">Loading box score…</div>';
+ const st=sum.header.competitions[0].status?.type?.state;if(st==='pre'||!(sum.drives?.previous||[]).length)return '<div class="empty">The box score appears once the game is underway.</div>';
+ let rec;try{rec=NFLLiveBox.build(sum)}catch(err){console.error(err);return '<div class="empty">Couldn’t build the live box score for this game ('+esc(err.message)+'). The other tabs still work.</div>'}
+ const A=rec._away,H=rec._home;let a=rec[A],b=rec[H];
+ if(S.period!=='full'){const pa=a.periods?.[S.period],pb=b.periods?.[S.period];if(pa&&pb){a=pa;b=pb}}
+ const heads={t1:A,t2:H};
+ const live=st==='in';const weeks=NFL_MODEL.meta?.weeks||[];
+ const sel=`<label>Stat window <select data-period>${PERIODS.map(([k,n])=>`<option value="${k}"${k===S.period?' selected':''}>${n}</option>`).join('')}</select></label>`;
+ const cav=`<div class="nbx-cav">${live?'<b style="color:var(--live)">Live</b> · updates with the feed. ':''}Unofficial: built from ESPN play-by-play with your dashboard’s formulas. EPA comes from a live model fitted to nflverse, so EPA and success rates can differ slightly from the final box (team EPA/play is usually within about 0.04). Percentiles compare against the dashboard’s team-games from Weeks ${weeks[0]}–${weeks[weeks.length-1]}. The verified box appears on the NFL dashboard after the weekly update.</div>`;
+ return `<div class="nflbox"><div class="nbx-bar">${sel}${cav}</div>${NFLBoxRender.cols(a,b,heads)}${NFLBoxRender.driveChart(rec)}</div>`;
 }
 function playsHTML(sum,away,home){
  const drives=allDrives(sum);if(!drives.length)return '<div class="empty">No plays yet.</div>';
@@ -295,7 +323,7 @@ async function loadBoard(){
  $('#wkLabel').textContent=wk!=null?(stype===3?'Postseason ':'Week ')+wk:'';
  $('#prevWk').disabled=!(wk>1);$('#nextWk').disabled=!(wk<LG[S.lg].maxWk);
  $('#curWk').hidden=S.week==null;}
-async function loadDetail(){const id=S.game;const j=await getJSON(sumURL(id));if(S.game===id)S.summary=j}
+async function loadDetail(){const id=S.game;if(S.lg==='nfl')await ensureModel().catch(()=>{});const j=await getJSON(sumURL(id));if(S.game===id)S.summary=j}
 async function tick(manual){
  if(S.busy)return;S.busy=true;clearTimeout(S.timer);
  try{await loadBoard();if(S.game)await loadDetail();S.lastOk=new Date();showErr(null)}
@@ -311,10 +339,11 @@ function render(){
  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lg===S.lg));
  $('#filt').hidden=!!S.game;$('#weeknav').hidden=!!S.game;
  if(S.game)renderDetail();else renderBoard();setStatus();}
-function go(change){Object.assign(S,change);if('game' in change||'lg' in change){S.summary=null;S.open=new Set();S.seenPlays=new Set();if(!('tab' in change))S.tab='plays'}
+function go(change){Object.assign(S,change);if('game' in change||'lg' in change){S.summary=null;S.open=new Set();S.seenPlays=new Set();if(!('tab' in change))S.tab=S.lg==='nfl'?'nflbox':'plays';S.period='full';S.dcOpen=new Set()}
  writeHash();render();window.scrollTo({top:0});tick()}
 
 document.addEventListener('click',e=>{
+ const dc=e.target.closest('[data-dc-target]');if(dc){const id=dc.getAttribute('data-dc-target');const el=document.getElementById(id);if(el){el.hidden=!el.hidden;if(el.hidden)S.dcOpen.delete(id);else S.dcOpen.add(id)}return}
  const lg=e.target.closest('.seg button');if(lg){if(lg.dataset.lg!==S.lg)go({lg:lg.dataset.lg,game:null,week:null,curWeek:null,events:[]});return}
  const card=e.target.closest('.gcard');if(card){go({game:card.dataset.id});return}
  if(e.target.closest('[data-back]')){go({game:null});return}
@@ -322,7 +351,8 @@ document.addEventListener('click',e=>{
  const dv=e.target.closest('[data-drive]');if(dv){const id=dv.dataset.drive;const open=dv.getAttribute('aria-expanded')==='true';
   if(open){S.open.delete(id);S.open.add('x'+id)}else{S.open.add(id);S.open.delete('x'+id)}render();return}
 });
-document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('gcard')){e.preventDefault();go({game:e.target.dataset.id})}});
+document.addEventListener('change',e=>{if(e.target.matches('[data-period]')){S.period=e.target.value;render()}});
+document.addEventListener('keydown',e=>{const dc=e.target.closest&&e.target.closest('[data-dc-target]');if(dc&&(e.key==='Enter'||e.key===' ')){e.preventDefault();dc.click();return}if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('gcard')){e.preventDefault();go({game:e.target.dataset.id})}});
 $('#prevWk').onclick=()=>{const wk=(S.week??S.curWeek??1)-1;if(wk>=1)go({week:wk,seasontype:2})};
 $('#nextWk').onclick=()=>{const wk=(S.week??S.curWeek??0)+1;if(wk<=LG[S.lg].maxWk)go({week:wk,seasontype:2})};
 $('#curWk').onclick=()=>go({week:null});
