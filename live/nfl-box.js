@@ -55,7 +55,10 @@ function parse(sum_){
       // two-point try written inside the touchdown play (ESPN): give it its own row, like nflverse
       const m=tx.match(/TWO-POINT CONVERSION ATTEMPT\.(.*?)(ATTEMPT (SUCCEEDS|FAILS))/i);
       if(m&&!/^two-point/i.test(ty)){const t2={...r,id:p.id+'_2pt',text:'TWO-POINT CONVERSION ATTEMPT.'+m[1]+m[2],down:null,ydstogo:2,yl:2,goal:true,scoring:/SUCCEEDS/i.test(m[3]),stat:0,penalty:false,noPlay:false};
-        classify(t2,true); t2.twoPt=true; t2.twoOk=/SUCCEEDS/i.test(m[3]); t2.td=false; rows.push(t2); r.td=r.td;}
+        classify(t2,true); t2.twoPt=true; t2.twoOk=/SUCCEEDS/i.test(m[3]); t2.td=false; t2.parent=r; rows.push(t2);}
+      const x=tx.match(/extra point is (GOOD|No Good|Blocked)|extra point.{0,40}(BLOCKED)/i);
+      if(x&&!/^extra point/i.test(ty)&&!r.pat){const pr={...r,id:p.id+'_pat',text:'(extra point) '+x[0],down:null,yl:15,goal:false,scoring:/GOOD/i.test(x[0]),stat:0,penalty:false,noPlay:false,kick:false,punt:false,fg:false};
+        classify(pr,false); pr.pat=true; pr.patOk=/GOOD/i.test(x[0]); pr.is_scrim=pr.is_rush=pr.is_db=pr.passAtt=pr.rushAtt=false; pr.td=false; pr.int=pr.fumble=pr.forced=pr.pd=false; pr.parent=r; rows.push(pr);}
     }
   });
   rows.forEach((r,i)=>r.i=i);
@@ -70,15 +73,19 @@ function classify(r,two){
   r.scramble=live&&/scrambles/i.test(tx); r.sack=live&&/sacked/i.test(tx);
   r.passAtt=live&&!r.scramble&&(r.sack||r.spike||/\bpass\b/i.test(tx.split(/PENALTY/i)[0]));
   r.is_db=live&&(r.passAtt||r.scramble);
-  r.rushAtt=live&&!r.is_db&&(/^(rush|rushing touchdown)$/i.test(ty)||RUNPAT.test(tx.split(/PENALTY/i)[0])||r.kneel);
+  r.rushAtt=live&&!r.is_db&&(/^(rush|rushing touchdown)$/i.test(ty)||RUNPAT.test(tx.split(/PENALTY/i)[0])||r.kneel||(/fumble/i.test(ty)&&r.down>0));
   r.is_rush=r.rushAtt&&!r.kneel;
   r.is_scrim=r.is_rush||r.is_db;
-  r.int=/INTERCEPTED/i.test(tx)&&!r.noPlay;
-  r.comp=r.passAtt&&!r.sack&&!r.spike&&!r.int&&!/incomplete/i.test(tx);
+  // ESPN keeps the original call in the text after a replay reversal; the play type carries the final ruling
+  const reversedToInc=/^pass incompletion$/i.test(ty), reversedToSack=/^sack/i.test(ty)&&!/sacked/i.test(tx);
+  if(reversedToSack){r.sack=true;r.passAtt=live;r.is_db=live}
+  r.int=!r.noPlay&&/INTERCEPTED/i.test(tx)&&(/interception/i.test(ty)||(/fumble/i.test(ty)&&!/sack/i.test(ty))||(/penalty/i.test(ty)))&&!reversedToInc&&!reversedToSack;
+  r.comp=r.passAtt&&!r.sack&&!r.spike&&!r.int&&(/^(pass reception|passing touchdown)$/i.test(ty)||(!reversedToInc&&!/incomplete/i.test(tx)&&!/INTERCEPTED/i.test(tx)));
+  r.reversedInc=reversedToInc;
   r.fumble=/FUMBLES|MUFFS/i.test(tx)&&!r.noPlay;
   r.forced=/FUMBLES \((?!aborted)[^)]+\)/i.test(tx)&&!r.noPlay;
-  r.pd=(r.int||/incomplete[^.]*\([^)]+\)/i.test(tx))&&!r.noPlay;
-  r.td=/TOUCHDOWN/i.test(tx)&&!/TOUCHDOWN NULLIFIED/i.test(tx)&&!r.noPlay&&!r.twoPt;
+  r.pd=(r.int||/incomplete[^(]*?\((?!shotgun|no huddle)[^)]+\)/i.test(tx.split(/PENALTY/i)[0])||(r.reversedInc&&/INTERCEPTED/i.test(tx)))&&!r.noPlay;
+  r.td=/TOUCHDOWN/i.test(tx)&&!/TOUCHDOWN NULLIFIED/i.test(tx)&&!r.noPlay&&!r.twoPt&&(r.scoring||/touchdown/i.test(ty))&&!(r.reversedInc&&!/touchdown/i.test(ty));
   r.safety=/SAFETY/i.test(tx)&&!r.noPlay&&!/penalty on .*safety/i.test(tx);
 }
 function finish(G){
@@ -96,20 +103,25 @@ function finish(G){
     let y=r.stat;
     if(r.is_scrim){
       const pre=r.text.split(/PENALTY|FUMBLES/i)[0];
-      if(r.int)y=0;
+      if(r.int||r.reversedInc)y=0;
       else if(r.penalty||r.fumble){const m=pre.match(/for (-?\d+) (?:yards?|yds?)/i);y=m?+m[1]:(/no gain|incomplete/i.test(pre)?0:y)}
       else if(/incomplete/i.test(r.text))y=0;
     }
     r.yds=y;
-    r.conv=r.td&&r.tdTeam===r.pos||(!r.td&&r.endTeam===r.pos&&r.endDown===1&&!r.int&&!r.fumLost);
+    const prog=(r.yl!=null&&r.endYl!=null)?r.yl-r.endYl:0;
+    r.conv=(r.td&&r.tdTeam===r.pos)||(!r.td&&r.down>0&&r.endTeam===r.pos&&r.endDown===1&&!r.int&&!r.fumLost&&(r.down>1||prog>=r.ydstogo||(prog>0&&r.endDist!==r.ydstogo-prog)));
   }
+  for(const r of rows)if(r.parent){const t=r.parent.tdTeam||r.parent.pos;r.pos=t;r.def=t===G.home?G.away:G.home;}
   // EPA for scrimmage rows
   const M=MODEL.ep;
   rows.forEach((r,i)=>{
     r.epa=null;
-    if(r.twoPt&&r.is_scrim){r.epa=r.twoOk?M.twoPt.success:M.twoPt.fail;return}
-    if(!r.is_scrim||!(r.down>0))return;
-    const e0=EP(r.down,r.ydstogo,r.yl);
+    if(r.twoPt){r.epa=r.twoOk?M.twoPt.success:M.twoPt.fail;return}
+    if(r.pat){r.epa=r.patOk?0.04:-0.96;return}
+    if(!r.pos)return;
+    if(!(r.down>0)&&!r.kick)return;
+    const e0=r.kick?1.11:EP(r.down,r.ydstogo,r.yl);
+    if(r.fg&&!r.is_scrim&&/GOOD/i.test(r.text)&&!/no good/i.test(r.text)&&!r.noPlay){r.epa=3-e0;return}
     if(r.td)r.epa=(r.tdTeam===r.pos?M.td:M.oppTd)-e0;
     else if(r.safety)r.epa=M.safety-e0;
     else{
@@ -119,7 +131,7 @@ function finish(G){
       r.epa=en==null?-e0:(team===r.pos?en:-en)-e0;
     }
   });
-  for(const r of rows){r.succ=r.is_scrim&&r.epa!=null&&r.epa>0;r.expl=(r.is_rush&&r.yds>=10)||(r.is_db&&r.yds>=15);r.explP=r.is_db&&r.yds>=15;r.explR=r.is_rush&&r.yds>=10}
+  for(const r of rows){r.succ=r.epa!=null&&r.epa>0;r.expl=(r.is_rush&&r.yds>=10)||(r.is_db&&r.yds>=15);r.explP=r.is_db&&r.yds>=15;r.explR=r.is_rush&&r.yds>=10}
   buildSeries(G); buildDrives(G);
 }
 
@@ -130,7 +142,7 @@ function buildSeries(G){
   rows.forEach((r,i)=>{
     if(!(r.down>0)||r.kick)return;
     if(!cur||cur.team!==r.pos||cur.closed||cur.di!==r.di){cur={team:r.pos,di:r.di,rows:[],closed:false,succ:false,res:null,q:null};S.push(cur)}
-    cur.rows.push(r); if(cur.q==null&&!r.noPlay)cur.q=r.qtr;
+    cur.rows.push(r); if(cur.q==null)cur.q=r.qtr;
     if(r.td&&r.tdTeam===r.pos){cur.succ=true;cur.res='Touchdown';cur.closed=true}
     else if(r.conv){cur.succ=true;cur.res='First down';cur.closed=true}
   });
