@@ -240,5 +240,59 @@
    ]
   ],
   "why": "JSU-WKU wk11: official line score WKU 14-7-0-13 = 34 (JSU 24), but the feed ends 28-24 after WKU's TD with 0:01 and the 0:02 kickoff; WKU's other 6 points came on the final kickoff return, which the feed omits. Attached to the TD row (same possession, as with MTSU wk10) so the drive chart final matches; chart_overrides splits it into the final-play TD. Official 34-24 WKU (CFBD)."
+ },
+ "401858308628": {
+  "events": [
+   [
+    "California",
+    6
+   ]
+  ],
+  "why": "Stanford-Cal wk12: Mohammed 1-yd TD run, no successful try - feed 14->20. Official 44-28 Stanford (CFBD)."
+ },
+ "401871077804": {
+  "events": [
+   [
+    "New Mexico State",
+    6
+   ]
+  ],
+  "why": "Delaware-NMSU wk12: Pride 14-yd TD catch; the summary text claims a 2-pt run but the feed goes 24->30 and the official final is 42-30 Delaware (CFBD) - no conversion."
+ },
+ "401871078786": {
+  "events": [
+   [
+    "Florida International",
+    6
+   ]
+  ],
+  "why": "FIU-Kennesaw St wk12: McNeal 3-yd TD catch at 1:56, no successful try - feed 18->24. Official 35-24 Kennesaw St (CFBD)."
+ },
+ "401860918830": {
+  "events": [
+   [
+    "Colorado State",
+    8
+   ]
+  ],
+  "why": "CSU-Fresno St wk12: Amos 33-yd TD catch at 0:26 plus a 2-pt conversion the text omits - feed 34->42. Official 49-42 Fresno St (CFBD)."
+ },
+ "401858528819": {
+  "events": [
+   [
+    "Michigan",
+    2
+   ]
+  ],
+  "why": "UCLA-Michigan wk12, 3rd OT (2-pt round): Michigan's successful 2-pt try is missing from the feed; this row is UCLA's failed try - feed Michigan 16->18. Official 18-16 Michigan (CFBD)."
+ },
+ "401856866796": {
+  "events": [
+   [
+    "BYU",
+    2
+   ]
+  ],
+  "why": "BYU-Kansas wk12, 3rd OT (2-pt round): BYU's successful 2-pt try is missing from the feed; this row is Kansas's failed try - feed BYU 29->31. Official 31-29 BYU (CFBD)."
  }
 }

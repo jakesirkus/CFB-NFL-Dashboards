@@ -1362,5 +1362,285 @@
  "401856887": {
   "Ole Miss": 17,
   "Oklahoma": 24
+ },
+ "401856746": {
+  "Chattanooga": 0,
+  "Alabama": 47
+ },
+ "401856747": {
+  "Samford": 17,
+  "Auburn": 59
+ },
+ "401856748": {
+  "Vanderbilt": 27,
+  "Florida": 34
+ },
+ "401856749": {
+  "Wofford": 17,
+  "Ole Miss": 59
+ },
+ "401856750": {
+  "Tennessee Tech": 16,
+  "Mississippi State": 34
+ },
+ "401856751": {
+  "Kentucky": 14,
+  "Missouri": 28
+ },
+ "401856752": {
+  "Texas A&M": 7,
+  "Oklahoma": 28
+ },
+ "401856753": {
+  "Georgia": 34,
+  "South Carolina": 6
+ },
+ "401856754": {
+  "LSU": 13,
+  "Tennessee": 27
+ },
+ "401856755": {
+  "Arkansas": 3,
+  "Texas": 45
+ },
+ "401856865": {
+  "Arizona": 35,
+  "Kansas State": 28
+ },
+ "401856866": {
+  "BYU": 31,
+  "Kansas": 29
+ },
+ "401856867": {
+  "Colorado": 28,
+  "Cincinnati": 35
+ },
+ "401856868": {
+  "Houston": 34,
+  "West Virginia": 31
+ },
+ "401856869": {
+  "Iowa State": 17,
+  "UCF": 48
+ },
+ "401856870": {
+  "Oklahoma State": 30,
+  "Arizona State": 27
+ },
+ "401856871": {
+  "Texas Tech": 20,
+  "Baylor": 10
+ },
+ "401856872": {
+  "Utah": 38,
+  "TCU": 17
+ },
+ "401858302": {
+  "Virginia Tech": 20,
+  "Miami": 28
+ },
+ "401858303": {
+  "Clemson": 20,
+  "Duke": 10
+ },
+ "401858304": {
+  "NC State": 28,
+  "Florida State": 10
+ },
+ "401858305": {
+  "North Carolina": 24,
+  "Virginia": 41
+ },
+ "401858306": {
+  "Pittsburgh": 10,
+  "Louisville": 42
+ },
+ "401858307": {
+  "SMU": 3,
+  "Notre Dame": 24
+ },
+ "401858308": {
+  "Stanford": 44,
+  "California": 28
+ },
+ "401858309": {
+  "Syracuse": 15,
+  "Boston College": 27
+ },
+ "401858310": {
+  "Wake Forest": 50,
+  "Georgia Tech": 29
+ },
+ "401858527": {
+  "Iowa": 34,
+  "Illinois": 17
+ },
+ "401858528": {
+  "UCLA": 16,
+  "Michigan": 18
+ },
+ "401858529": {
+  "Oregon": 45,
+  "Michigan State": 7
+ },
+ "401858530": {
+  "Northwestern": 17,
+  "Minnesota": 20
+ },
+ "401858531": {
+  "Ohio State": 28,
+  "Nebraska": 31
+ },
+ "401858532": {
+  "Rutgers": 25,
+  "Penn State": 24
+ },
+ "401858533": {
+  "Wisconsin": 42,
+  "Purdue": 10
+ },
+ "401858534": {
+  "Maryland": 21,
+  "USC": 35
+ },
+ "401858535": {
+  "Indiana": 24,
+  "Washington": 27
+ },
+ "401860918": {
+  "Colorado State": 42,
+  "Fresno State": 49
+ },
+ "401860919": {
+  "Utah State": 24,
+  "Oregon State": 31
+ },
+ "401860920": {
+  "Washington State": 14,
+  "Texas State": 42
+ },
+ "401860925": {
+  "San Diego State": 22,
+  "Boise State": 20
+ },
+ "401861968": {
+  "Old Dominion": 21,
+  "UConn": 29
+ },
+ "401862830": {
+  "Rice": 31,
+  "Temple": 27
+ },
+ "401862831": {
+  "East Carolina": 10,
+  "Army": 6
+ },
+ "401862832": {
+  "Charlotte": 14,
+  "Tulsa": 42
+ },
+ "401862833": {
+  "South Florida": 14,
+  "Florida Atlantic": 35
+ },
+ "401862834": {
+  "Memphis": 34,
+  "Navy": 38
+ },
+ "401862835": {
+  "North Texas": 24,
+  "Tulane": 28
+ },
+ "401862836": {
+  "UTSA": 19,
+  "UAB": 17
+ },
+ "401864541": {
+  "Hawai'i": 8,
+  "Nevada": 16
+ },
+ "401864542": {
+  "New Mexico": 24,
+  "Wyoming": 17
+ },
+ "401864543": {
+  "Northern Illinois": 25,
+  "North Dakota State": 31
+ },
+ "401864544": {
+  "UNLV": 24,
+  "San Jos\u00e9 State": 22
+ },
+ "401864545": {
+  "UTEP": 3,
+  "Air Force": 52
+ },
+ "401866464": {
+  "Ball State": 28,
+  "Ohio": 35
+ },
+ "401866465": {
+  "Eastern Michigan": 27,
+  "Western Michigan": 34
+ },
+ "401866466": {
+  "Miami (OH)": 20,
+  "Kent State": 3
+ },
+ "401866467": {
+  "Akron": 34,
+  "Massachusetts": 33
+ },
+ "401866468": {
+  "Bowling Green": 0,
+  "Toledo": 19
+ },
+ "401866469": {
+  "Central Michigan": 21,
+  "Buffalo": 40
+ },
+ "401869929": {
+  "UL Monroe": 16,
+  "App State": 17
+ },
+ "401869938": {
+  "Arkansas State": 3,
+  "Louisiana Tech": 48
+ },
+ "401869946": {
+  "Coastal Carolina": 24,
+  "Louisiana": 38
+ },
+ "401869953": {
+  "Georgia Southern": 45,
+  "Troy": 7
+ },
+ "401869958": {
+  "Georgia State": 27,
+  "Marshall": 28
+ },
+ "401871077": {
+  "Delaware": 42,
+  "New Mexico State": 30
+ },
+ "401871078": {
+  "Florida International": 24,
+  "Kennesaw State": 35
+ },
+ "401871079": {
+  "Missouri State": 20,
+  "Jacksonville State": 25
+ },
+ "401871080": {
+  "Western Kentucky": 14,
+  "Liberty": 45
+ },
+ "401871081": {
+  "Middle Tennessee": 31,
+  "Sam Houston": 28
+ },
+ "401871101": {
+  "South Alabama": 40,
+  "Southern Miss": 35
  }
 }
