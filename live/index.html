@@ -4,7 +4,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--bg:#0A0E16;--card:#111724;--card2:#161E2E;--line:#222C3E;--ink:#F3F5F9;--muted:#94A0B4;--accent:#FFB020;--live:#FF4D5E;--good:#3DDC97}
-*{box-sizing:border-box}
+*{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,sans-serif}
 a{color:var(--accent)}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 16px 60px}
@@ -237,7 +237,7 @@ function playsHTML(sum,away,home){
    const dd=p.start?.down>0?(p.start.shortDownDistanceText||`${p.start.down} & ${p.start.distance}`)+(p.start.possessionText?' · '+p.start.possessionText:''):'';
    return `<li class="${p.scoringPlay?'score-play':''}${p.isTurnover?' to-play':''}${isNew?' newp':''}"><div class="dd">Q${esc(p.period?.number)} ${esc(p.clock?.displayValue||'')}<br>${esc(dd)}</div><div class="txt">${esc(p.text)}</div></li>`}).join(''):'';
   (d.plays||[]).forEach(p=>newSeen.push(p.id));
-  return `<div class="drive"><button class="dsum" data-drive="${esc(d.id)}" aria-expanded="${open}">${img(t.logo||t.logos?.[0]?.href,'')}<div><span class="res ${cls}">${esc(res||'Drive')}</span> <span class="meta">· ${esc(t.abbreviation||'')} · ${esc(d.description||'')}${d.start?.text?' · start '+esc(d.start.text):''}</span></div><span class="scr">${esc(scr)}</span></button>${open?`<ul class="plays">${plays}</ul>`:''}</div>`}).join('');
+  return `<div class="drive"><button class="dsum" data-drive="${esc(d.id)}" aria-expanded="${open}">${img(t.logo||t.logos?.[0]?.href,'')}<div><span class="res ${cls}">${esc(res||'Drive')}</span> <span class="meta">· ${esc(t.abbreviation||'')} · ${esc(d.description||'')}${d.start?.text&&!/ 0$/.test(d.start.text)?' · start '+esc(d.start.text):''}</span></div><span class="scr">${esc(scr)}</span></button>${open?`<ul class="plays">${plays}</ul>`:''}</div>`}).join('');
  newSeen.forEach(id=>S.seenPlays.add(id));
  return out}
 function boxHTML(sum,away,home){
@@ -265,7 +265,7 @@ function boxHTML(sum,away,home){
  const keys=order.filter(k=>a[k]||h[k]).concat(Object.keys(a).filter(k=>!order.includes(k)&&h[k]));
  for(const k of keys){const x=a[k]||{},y=h[k]||{};pair(x.label||y.label||k,x.displayValue??'–',y.displayValue??'–',num(x.displayValue),num(y.displayValue),hiBetter[k]||0)}
  return `<table class="cmp"><tr><th>${esc(away.team.abbreviation)}</th><th></th><th>${esc(home.team.abbreviation)}</th></tr>${rows.join('')}</table>
- <p class="note">Computed rows use ESPN play-by-play: success = 50% of yards-to-go on 1st down, 70% on 2nd, 100% on 3rd/4th (or a TD); scrimmage plays only, no kneels/spikes/penalty-nullified plays. Opportunity = drive with a snap at or inside the opponent 40. These are yards-based and unadjusted, so they won’t match the dashboards’ EPA-based success rate.</p>`}
+ <p class="note">Computed rows use ESPN play-by-play: success = 50% of yards-to-go on 1st down, 70% on 2nd, 100% on 3rd/4th (or a TD); scrimmage plays only, no kneels/spikes/penalty-nullified plays. Opportunity = drive with a snap at or inside the opponent 40. These are yards-based and unadjusted, so they won’t match the dashboards’ EPA-based success rate, and ESPN’s play-by-play can disagree slightly with its own box-score totals.</p>`}
 function leadersHTML(sum){
  const L=sum.leaders||[];if(!L.length)return '<div class="empty">No leaders yet.</div>';
  return `<div class="lead">${L.map(t=>`<div class="lc"><h4>${esc(t.team?.displayName||'')}</h4>${(t.leaders||[]).map(cat=>{const l=cat.leaders?.[0];return l?`<div class="pl"><span><span style="color:var(--muted)">${esc(cat.displayName)}:</span> ${esc(l.athlete?.displayName||'')}</span><span>${esc(l.displayValue||'')}</span></div>`:''}).join('')}</div>`).join('')}</div>`}
