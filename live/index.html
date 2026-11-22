@@ -185,7 +185,10 @@ function computeStats(sum,ids){
   const startPts=ha[tid]==='home'?prevH:prevA;let opp=false;
   for(const p of plays){
    if(p.homeScore!=null){prevH=p.homeScore;prevA=p.awayScore}
-   if(!s)continue;const k=playKind(p);const dn=p.start?.down||0,ds=p.start?.distance||0,y=num(p.statYardage)??0;
+   if(!s)continue;const k=playKind(p);const dn=p.start?.down||0,ds=p.start?.distance||0;let y=num(p.statYardage)??0;
+   const ty=p.type?.text||'';
+   if(/interception/i.test(ty))y=0; // ESPN puts the defense's return yards on the offense's row
+   else if(/fumble/i.test(ty)&&!/own/i.test(ty)){const m=(p.text||'').match(/for (-?\d+) (?:yds?|yards?)/i);y=m?+m[1]:0}
    if(dn>0&&(p.start?.yardsToEndzone??99)<=40&&k)opp=true;
    if(!k||dn<1)continue;
    const td=/touchdown/i.test(p.type?.text||'')&&!/interception|fumble/i.test(p.type?.text||'');
