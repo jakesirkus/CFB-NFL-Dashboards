@@ -8,7 +8,7 @@ Claude chat so a chat with GitHub access can build **and push** each update.
 - Also published as claude.ai artifacts: CFB "FBS Team Dashboard", NFL "NFL Team Dashboard" (optional to keep updating)
 - Offline single-file copies go to the user's Downloads: `CFB_Dashboard_Weeks_1-N.html` (zipped), `NFL_Dashboard_Weeks_1-N.html`
 
-State (Nov 8, 2026): **CFB Weeks 1-11 (all 67 Week 11 games) — `out9`; Predictions = Week 12 (opener = Sunday Nov 15 DK snapshot)** (rebuild_w11.sh, out8 -> out9; late games: append plays to combined_raw_w1_11.pkl, ids to w11_gids.txt + official_finals.json, rerun). **NFL Weeks 1-10 (complete)** (nfl_v51.html: Weeks 1-10 complete; next NFL build: PREV=nfl_v51.html).
+State (Nov 8, 2026): **CFB Weeks 1-12 (all 70 Week 12 games) — `out10`; Predictions = Week 13 (opener = Sunday Nov 22 DK snapshot)** (rebuild_w11.sh, out8 -> out9; late games: append plays to combined_raw_w1_11.pkl, ids to w11_gids.txt + official_finals.json, rerun). **NFL Weeks 1-10 (complete)** (nfl_v51.html: Weeks 1-10 complete; next NFL build: PREV=nfl_v51.html).
 
 ## Layout (run scripts from inside `cfb_full/` or `nfl_full/`)
 
@@ -237,3 +237,10 @@ Fixes: score_overrides (Memphis re-kicked PAT, Boise pick-six 2-pt, Missouri St 
 Coastal missing TD on 'Sack' row, WKU final-play TD per official 34-24); flag_overrides (BC + Arkansas St sack-fumble TDs = lost fumbles);
 chart_overrides Week 11 block (defensive-TD labels, ND muffed punt, WKU final-play TD drive, USM-La Tech clock tags).
 Ratings reloaded from the Nov 13 workbook (through Week 10). Predictions Week 12 (rebuild_w11.sh PW default 12; lines_w12_open.json = Sun Nov 15 5:15 PM ET DK snapshot).
+
+## CFB Week 12 (Nov 22 2026) + workspace reset
+Container was replaced Nov 22: re-created /home/claude/.secrets (user re-sent keys), re-fetched PFF raw (cfb weeks 0-12, nfl 1-11 - NOTE cfb needs week 0),
+ratings/cfb.json from WEEK_11_REAL_CFB.xlsx (thru wk 11), ratings/nfl.json from REAL_NFL_MODEL (thru wk 9) + ratings/nfl_qb.json (PHI wk7 -5).
+jsdom for verify scripts: NODE_PATH=/home/claude/nodetools/node_modules (npm i jsdom@24 there).
+rebuild_w12.sh (out9 -> out10, PW=13). Fixes: 6 score_overrides (Cal / FIU / NMSU TD no try, CSU TD + 2-pt, Michigan + BYU 3OT 2-pt tries missing);
+chart_overrides Week 12 block (Chattanooga safety label, Syracuse INT nullified -> TOD).

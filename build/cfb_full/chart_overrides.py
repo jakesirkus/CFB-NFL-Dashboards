@@ -266,6 +266,15 @@ def fix(gk, ch):
         x = get(ch, 4)
         if x['team'] == 'San Diego State' and x['t1'] == '15:00' and x['playList'] and x['playList'][0]['text'].startswith('(00:00)'):
             x['playList'].append(x['playList'].pop(0)); x.update({'t1': '2:05', 't2': '0:00'})
+    # ---------------- Week 12 ----------------
+    elif gk == '12_401856746':   # Chattanooga - Alabama: Lalin tackled in the end zone - an Alabama safety, not a Chattanooga TD
+        x = get(ch, 6)
+        if x['team'] == 'Chattanooga' and x['result'] == 'Touchdown' and 'SAFETY' in x['playText'].upper():
+            x.update({'result': 'Safety', 'color': 'red', 'scored': False})
+    elif gk == '12_401858309':   # Syracuse - BC: the Upton interception was wiped out by offsetting holds; the replayed 4th down fell incomplete
+        x = get(ch, 20)
+        if x['team'] == 'Syracuse' and x['result'] == 'Interception' and 'TURNOVER ON DOWNS' in x['playList'][-1]['text']:
+            x.update({'result': 'Turnover on Downs', 'color': 'red'})
     infer_missing_endings(gk, ch)
     return renum(ch)
 
