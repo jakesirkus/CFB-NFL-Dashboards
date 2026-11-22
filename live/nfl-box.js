@@ -25,6 +25,8 @@ const sum=(a,f)=>a.reduce((s,x)=>s+(f?f(x):x),0);
 const secs=t=>{const m=String(t||'').match(/(\d+):(\d+)/);return m?(+m[1])*60+(+m[2]):null};
 const RUNPAT=/\b(up the middle|left end|right end|left tackle|right tackle|left guard|right guard|rushes|runs?\b|direct snap|to the left|to the right)/i;
 function lineYards(y){if(y<0)return 1.2*y;y=Math.min(y,11);return y<=4?y:(y<=8?4+0.5*(y-4):6+0.25*(y-8))}
+const AUTOFD=/(defensive pass interference|defensive holding|illegal contact|roughing the passer|unnecessary roughness|face ?mask|horse collar|illegal use of hands|personal foul|lowering the head|taunting|unsportsmanlike)/i;
+function penOnDefense(r,G){const m=r.text.match(/PENALTY on ([A-Z]{2,3})/);if(!m)return false;const d=G.T[r.def];return !!d&&(m[1]===d.abbr||(m[1]==='WAS'&&d.abbr==='WSH')||(m[1]==='WSH'&&d.abbr==='WAS')||(m[1]==='LA'&&d.abbr==='LAR'))}
 const NONPLAY=/^(timeout|official timeout|end period|end of half|end of game|two-minute warning|coin toss|end of regulation)/i;
 
 /* ---------- ESPN summary -> nflverse-like rows ---------- */
@@ -96,7 +98,8 @@ function finish(G){
     r.fumTeam=null;r.fumLost=false;
     if(r.fumble){
       if(r.punt||r.kick){r.fumTeam=r.punt?r.def:r.pos; r.fumLost=r.endTeam!=null&&r.endTeam!==r.fumTeam||(!!recTeam&&recTeam!==T[r.fumTeam]?.abbr&&!/and recovers/i.test(r.text))}
-      else {r.fumTeam=r.pos; r.fumLost=!r.int&&r.endTeam!=null&&r.endTeam!==r.pos}
+      else if(r.int){r.fumTeam=r.def; r.fumLost=r.endTeam!=null&&r.endTeam===r.pos}   // fumble on the interception return
+      else {r.fumTeam=r.pos; r.fumLost=r.endTeam!=null&&r.endTeam!==r.pos}
     }
     r.tdTeam=!r.td?null:r.punt?(r.fumLost?r.pos:r.def):(r.fg&&!r.is_scrim)?r.def:((r.int||r.fumLost)?r.def:r.pos);
     // yards gained, nflverse-style
@@ -104,12 +107,14 @@ function finish(G){
     if(r.is_scrim){
       const pre=r.text.split(/PENALTY|FUMBLES/i)[0];
       if(r.int||r.reversedInc)y=0;
+      else if(r.fumble&&!r.penalty&&r.yl!=null&&r.endYl!=null){y=r.fumLost?r.yl-(100-r.endYl):r.yl-r.endYl}   // nflverse: yards to the recovery spot
       else if(r.penalty||r.fumble){const m=pre.match(/for (-?\d+) (?:yards?|yds?)/i);y=m?+m[1]:(/no gain|incomplete/i.test(pre)?0:y)}
       else if(/incomplete/i.test(r.text))y=0;
     }
     r.yds=y;
     const prog=(r.yl!=null&&r.endYl!=null)?r.yl-r.endYl:0;
-    r.conv=(r.td&&r.tdTeam===r.pos)||(!r.td&&r.down>0&&r.endTeam===r.pos&&r.endDown===1&&!r.int&&!r.fumLost&&(r.down>1||prog>=r.ydstogo||(prog>0&&r.endDist!==r.ydstogo-prog)));
+    const auto=r.penalty&&r.endTeam===r.pos&&r.endDown===1&&r.down>0&&AUTOFD.test(r.text)&&penOnDefense(r,G);
+    r.conv=(r.td&&r.tdTeam===r.pos)||auto||(!r.td&&r.down>0&&r.endTeam===r.pos&&r.endDown===1&&!r.int&&!r.fumLost&&(r.down>1||prog>=r.ydstogo||(prog>0&&r.endDist!==r.ydstogo-prog)));
   }
   for(const r of rows)if(r.parent){const t=r.parent.tdTeam||r.parent.pos;r.pos=t;r.def=t===G.home?G.away:G.home;}
   // EPA for scrimmage rows
@@ -188,10 +193,10 @@ function buildDrives(G){
     const d={n:di+1,team:T[team].name,opponent:T[opp].name,how,q1:pr[0].qtr,t1:pr[0].clock,spot1,
       q2:lastRow.qtr,t2:lastRow.clock,spot2:endYl!=null?100-endYl:null,plays:scrimRows.length,yards:sum(scrimRows,r=>r.yds),
       top:dr.timeElapsed?.displayValue||null,result:res,color:COLOR[res]||'red',clickable:true,
-      opp30:pr.some(r=>(r.is_scrim||r.twoPt)&&r.yl!=null&&r.yl<=30&&r.pos===team),playText:lastRow.text,
+      opp30:pr.some(r=>r.is_scrim&&!r.twoPt&&r.yl!=null&&r.yl<=30&&r.pos===team),playText:lastRow.text,
       playList:pr.map(r=>{const e={q:r.qtr,text:r.text,scoring:r.scoring,penalty:r.penalty,down:r.down,distance:r.down?r.ydstogo:0,goalToGo:r.goal,yardline100:r.yl};if(r.penalty)Object.assign(e,penInfo(r.text,G));return e}),
       teamScore:isHome?hs:as,oppScore:isHome?as:hs,scored:pr.some(r=>r.scoring)};
-    d._rz=pr.some(r=>(r.is_scrim||r.twoPt)&&r.pos===team&&r.yl!=null&&r.yl<=20);
+    d._rz=pr.some(r=>r.is_scrim&&!r.twoPt&&r.pos===team&&r.yl!=null&&r.yl<=20);
     d._rztd=pr.some(r=>r.is_scrim&&!r.twoPt&&r.pos===team&&r.yl<=20&&r.td&&r.tdTeam===team);
     d._epa=sum(scrimRows.filter(r=>r.epa!=null),r=>r.epa); d._scrim=scrimRows.length; d._fdr=fdr; d._tm=team; d._di=di;
     d._pts=isHome?hs-ph:as-pa; ph=hs; pa=as; prevRes=res;
@@ -268,7 +273,7 @@ function teamBox(G,rowsIn,T_,O_,drives,period,ps){
   const oppd={trips:tr.length,points:pts,ppo:r1(sdiv(pts,tr.length),2),tds,fgs,busts:tr.filter(x=>x._pts===0).length,
     tripsAllowed:tra.length,pointsAllowed:ptsa,ppoAllowed:r1(sdiv(ptsa,tra.length),2),tdsAllowed:tdsa,fgsAllowed:fgsa,stopsInside30:tra.filter(x=>x._pts===0).length};
   const rz=tdr.filter(x=>x._rz); let rzv=sdiv(100*rz.filter(x=>x._rztd).length,rz.length);
-  if(period){const rzr=rowsIn.filter(r=>(r.is_scrim||r.twoPt)&&r.yl!=null&&r.yl<=20);const dis=new Set(rzr.map(r=>r.di));
+  if(period){const rzr=rowsIn.filter(r=>r.is_scrim&&!r.twoPt&&r.yl!=null&&r.yl<=20);const dis=new Set(rzr.map(r=>r.di));
     const dset=G.dchart.filter(x=>x._tm===T_&&dis.has(x._di));const tdd=new Set(rowsIn.filter(r=>r.is_scrim&&!r.twoPt&&r.yl<=20&&r.td).map(r=>r.di));
     rzv=sdiv(100*dset.filter(x=>tdd.has(x._di)).length,dset.length)}
   const ov={epaPlay:prod.epaPlay,successRate:sdiv(100*os.filter(r=>r.succ).length,n),earlySuccessRate:earlySR,ypp:prod.ypp,passEpaPlay:prod.passEpaPlay,dbEpaPlay:prod.dbEpaPlay,
