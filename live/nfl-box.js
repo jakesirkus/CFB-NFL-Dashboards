@@ -16,7 +16,12 @@ function feat(down,dist,ytg){
   dist=Math.min(Math.max(dist,1),30); const y=Math.min(Math.max(ytg,0),100);
   let i=Math.min(Math.floor(y/5),K-2); const f=(y-5*i)/5; const o=(down-1)*(K+2);
   w[o+i]=1-f; w[o+i+1]=f; w[o+K]=Math.log(dist); w[o+K+1]=Math.min(dist,20)/10; return w}
-function EP(down,dist,ytg){if(!(down>=1&&down<=4))return 0;const x=feat(down,dist,ytg),W=MODEL.ep.w;let s=0;for(let i=0;i<x.length;i++)s+=x[i]*W[i];return s}
+// v2 adds time left in the half and goal-to-go (fitted to nflverse EP, see nfl-model.json)
+function EP(down,dist,ytg,hs,goal){if(!(down>=1&&down<=4))return 0;const x=feat(down,dist,ytg);
+  if(hs==null)hs=900; goal=goal?1:0; const t=Math.min(Math.max(hs,0),1800)/1800, late=hs<=120?1:0, late2=(hs>120&&hs<=300)?1:0, y=ytg/100;
+  x.push(goal,t,late,late2,late*y,late2*y,late*(down===4?1:0),t*y,goal*(down===4?1:0));
+  const W=MODEL.ep.w;let s=0;for(let i=0;i<x.length;i++)s+=x[i]*W[i];return s}
+const halfSec=r=>r.qsec==null?null:(r.qtr===1||r.qtr===3?r.qsec+900:r.qsec);
 
 /* ---------- helpers ---------- */
 const r1=(x,n=1)=>x==null||!isFinite(x)?null:Math.round(x*10**n)/10**n;
@@ -125,14 +130,17 @@ function finish(G){
     if(r.pat){r.epa=r.patOk?0.04:-0.96;return}
     if(!r.pos)return;
     if(!(r.down>0)&&!r.kick)return;
-    const e0=r.kick?1.11:EP(r.down,r.ydstogo,r.yl);
+    const e0=r.kick?1.11:EP(r.down,r.ydstogo,r.yl,halfSec(r),r.goal);
     if(r.fg&&!r.is_scrim&&/GOOD/i.test(r.text)&&!/no good/i.test(r.text)&&!r.noPlay){r.epa=3-e0;return}
     if(r.td)r.epa=(r.tdTeam===r.pos?M.td:M.oppTd)-e0;
     else if(r.safety)r.epa=M.safety-e0;
     else{
       let en=null,team=null;
-      if(r.endDown>=1&&r.endDown<=4&&r.endYl>0&&r.endYl<100&&r.endTeam){en=EP(r.endDown,r.endDist,r.endYl);team=r.endTeam}
-      else{const half=r.qtr<=2?1:r.qtr<=4?2:3;for(let j=i+1;j<rows.length;j++){const n=rows[j];const h=n.qtr<=2?1:n.qtr<=4?2:3;if(h!==half)break;if(n.down>0&&!n.kick){en=EP(n.down,n.ydstogo,n.yl);team=n.pos;break}}}
+      const half=r.qtr<=2?1:r.qtr<=4?2:3; let nx=null;
+      for(let j=i+1;j<rows.length;j++){const n=rows[j];const h=n.qtr<=2?1:n.qtr<=4?2:3;if(h!==half)break;if(n.down>0&&!n.kick){nx=n;break}}
+      const hsN=nx?halfSec(nx):halfSec(r);
+      if(r.endDown>=1&&r.endDown<=4&&r.endYl>0&&r.endYl<100&&r.endTeam){en=EP(r.endDown,r.endDist,r.endYl,hsN,r.endDist>=r.endYl);team=r.endTeam}
+      else if(nx){en=EP(nx.down,nx.ydstogo,nx.yl,halfSec(nx),nx.goal);team=nx.pos}
       r.epa=en==null?-e0:(team===r.pos?en:-en)-e0;
     }
   });
@@ -311,5 +319,5 @@ function build(summary){
   rec._rows=G.rows; rec._home=G.T[H].name; rec._away=G.T[A].name;
   return rec;
 }
-root.NFLLiveBox={setModel,build,EP:(a,b,c)=>EP(a,b,c)};
+root.NFLLiveBox={setModel,build,EP};
 })(typeof window!=='undefined'?window:globalThis);
