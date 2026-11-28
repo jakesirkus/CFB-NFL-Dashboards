@@ -244,3 +244,6 @@ ratings/cfb.json from WEEK_11_REAL_CFB.xlsx (thru wk 11), ratings/nfl.json from 
 jsdom for verify scripts: NODE_PATH=/home/claude/nodetools/node_modules (npm i jsdom@24 there).
 rebuild_w12.sh (out9 -> out10, PW=13). Fixes: 6 score_overrides (Cal / FIU / NMSU TD no try, CSU TD + 2-pt, Michigan + BYU 3OT 2-pt tries missing);
 chart_overrides Week 12 block (Chattanooga safety label, Syracuse INT nullified -> TOD).
+
+## CFB opponent adjustment = SP+ units (Nov 27 2026, user)
+opp_adjust.py SP_MODE (default for cfb; --no-sp to revert): column 1 = offense SP+ offense rating, column 2 = defense SP+ defense rating (CFBD /ratings/sp, centred over FBS; fetched each build by rebuild_w12.sh into /home/claude/data/cfbd/sp_2026.json), + shrunk unit corrections; lambdas ratings/cfb_cv_sp.json. CV 0.776 vs 0.802 (ratings blend 0.25), 21 of 24 stats better. SOS still = user power ratings. NFL unchanged (unit + QB). CFBD adjusted stats (wepa) need Patreon tier 1.

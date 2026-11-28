@@ -24,6 +24,8 @@ python3 -I ../add_xpts.py cfb out10/index.html out10/index.html --all   # every 
 python3 -I ../patch_xpts_text.py cfb out10/index.html
 python3 -I ../add_totals.py cfb out10/index.html out10/index.html   # projected score / total for the Matchup tab (Nov 2)
 python3 -I ../add_line_stats.py cfb out10/index.html out10/index.html
+# SP+ offense/defense ratings for the unit-strength opponent adjustment (refreshed every build; key never written to the repo)
+curl -sS -H "Authorization: Bearer $(cat /home/claude/.secrets/cfbd_key)" "https://api.collegefootballdata.com/ratings/sp?year=2026" -o /home/claude/data/cfbd/sp_2026.json
 python3 -I ../opp_adjust.py cfb out10/index.html out10/index.html --blend 0.25
 # Predictions tab (Nov 8 2026; opener + line-move columns Nov 9): user's power ratings vs the market for the UPCOMING week (public, user's call). Refresh the inputs first:
 #   CFBD /games?year=2026&week=$PW -> /home/claude/data/cfbd/games_w$PW.json, /lines?year=2026&week=$PW -> lines_w$PW.json

@@ -45,13 +45,24 @@ for gk, v in D['boxscores'].items():
             if y is None or not w: continue
             OBS[m].append((gk, b['meta']['week'], t, o, 1 if b['meta']['home'] else -1, float(y), float(w), fbs))
 
+# SP+ unit mode (Nov 27 2026, user: CFB adjustment by opposing unit strength from CFBD SP+ offense/defense ratings): column 1 = the
+# offense's SP+ offense rating, column 2 = the defense's SP+ defense rating (both centred over FBS), plus the shrunk unit corrections.
+SP_MODE = (LG == 'cfb' and '--no-sp' not in args) or '--sp' in args or '--cv-sp' in args   # CFB default (CV 0.776 vs 0.802 ratings blend 0.25)
+SPO, SPD = {}, {}
+if SP_MODE:
+    _sp = [x for x in json.load(open(os.environ.get('SP_JSON', '/home/claude/data/cfbd/sp_2026.json'))) if x.get('offense', {}).get('rating') is not None]
+    _mo = np.mean([x['offense']['rating'] for x in _sp]); _md = np.mean([x['defense']['rating'] for x in _sp])
+    SPO = {x['team']: x['offense']['rating'] - _mo for x in _sp}; SPD = {x['team']: x['defense']['rating'] - _md for x in _sp}
+def r_off(t, wk, blend): return SPO.get(t, 0.0) if SP_MODE else rating(t, wk, blend)
+def r_def(t, wk, blend): return SPD.get(t, 0.0) if SP_MODE else rating(t, wk, blend)
+
 def fit(rows, blend, lam, use_r=True, rf=None, off=None):
     """weighted ridge; returns (mu, bOff, bDef, h, a[N], d[N]).  rf(team, week): rating override; off(row): known offset removed from y"""
     n = len(rows); P = 4 + 2 * N
     X = np.zeros((n, P)); y = np.zeros(n); w = np.zeros(n)
     for i, (gk, wk, t, o, hm, yy, ww, _) in enumerate(rows):
         X[i, 0] = 1; X[i, 3] = hm
-        if use_r: X[i, 1] = rf(t, wk) if rf else rating(t, wk, blend); X[i, 2] = rf(o, wk) if rf else rating(o, wk, blend)
+        if use_r: X[i, 1] = rf(t, wk) if rf else r_off(t, wk, blend); X[i, 2] = rf(o, wk) if rf else r_def(o, wk, blend)
         X[i, 4 + IDX[t]] = 1; X[i, 4 + N + IDX[o]] = 1; y[i] = yy - (off(rows[i]) if off else 0.0); w[i] = ww
     sw = np.sqrt(w); A = X * sw[:, None]; z = y * sw
     pen = np.zeros(P); pen[4:] = lam
@@ -61,7 +72,7 @@ def fit(rows, blend, lam, use_r=True, rf=None, off=None):
     return beta
 
 def predict(beta, rows, blend, use_r=True):
-    return np.array([beta[0] + (beta[1] * rating(t, wk, blend) + beta[2] * rating(o, wk, blend) if use_r else 0) + beta[3] * hm
+    return np.array([beta[0] + (beta[1] * r_off(t, wk, blend) + beta[2] * r_def(o, wk, blend) if use_r else 0) + beta[3] * hm
                      + beta[4 + IDX[t]] + beta[4 + N + IDX[o]] for (gk, wk, t, o, hm, yy, ww, _) in rows])
 
 FBS_ROWS = {m: [r for r in rows if r[7]] for m, rows in OBS.items()}
@@ -94,6 +105,16 @@ if '--cv' in args:
     json.dump({k: {m: list(v) for m, v in d.items()} for k, d in res.items()}, open(os.path.join(HERE, f'ratings/{LG}_cv.json'), 'w'))
     sys.exit()
 
+if '--cv-sp' in args:
+    C0 = json.load(open(os.path.join(HERE, f'ratings/{LG}_cv.json')))
+    out = {m: cv(m, 0, True) for m in METRICS}
+    keys = [k for k in ('no ratings', 'ratings, blend 0.25', 'ratings, blend 1.0') if k in C0]
+    common = [m for m in METRICS if all(m in C0[k] for k in keys)]
+    print(f'{LG}: CV error, {len(common)} stats  ' + '  '.join(f'{k}: {np.mean([C0[k][m][0] for m in common]):.4f}' for k in keys) + f'  SP+ units: {np.mean([out[m][0] for m in common]):.4f}')
+    for m in common: print(f'   {m:18s} ' + '  '.join(f'{C0[k][m][0]:.3f}' for k in keys) + f'  {out[m][0]:.3f}')
+    json.dump({m: list(v) for m, v in out.items()}, open(os.path.join(HERE, f'ratings/{LG}_cv_sp.json'), 'w'))
+    sys.exit()
+
 # ---------- final fit + adjustment ----------
 CVR = json.load(open(os.path.join(HERE, f'ratings/{LG}_cv.json')))
 if BLEND is None:
@@ -103,6 +124,11 @@ for m in METRICS:                     # a stat added after the last --cv run: cr
     if m not in CVR.get(_key, {}):
         CVR.setdefault(_key, {})[m] = list(cv(m, BLEND, True)); json.dump(CVR, open(os.path.join(HERE, f'ratings/{LG}_cv.json'), 'w'))
 LAM = {m: CVR[_key][m][1] for m in METRICS}
+if SP_MODE:                           # ridge strength cross-validated for the SP+ unit model (ratings/<lg>_cv_sp.json; stats missing there: CV now)
+    _spf = os.path.join(HERE, f'ratings/{LG}_cv_sp.json'); CSP = json.load(open(_spf)) if os.path.exists(_spf) else {}
+    for m in METRICS:
+        if m not in CSP: CSP[m] = list(cv(m, 0, True)); json.dump(CSP, open(_spf, 'w'))
+    LAM = {m: CSP[m][1] for m in METRICS}
 ADJ = {}                              # (team, side, stat) -> opponent-adjusted FBS-games value at box level (for the composite ranks)
 delta = {}; betas = {}
 # NFL (Nov 11 2026, user): every stat is schedule-adjusted by the opposing UNIT only (team stats, no power ratings), and the user's QB
@@ -127,8 +153,8 @@ for m in METRICS:
         effO = lambda r, k=CONV[m]: beta[4 + IDX[r[2]]] + k * qb_pts(r[2], r[1])           # the offense this defense faced, incl. its QB that day
     else:
         beta = fit(FBS_ROWS[m], BLEND, LAM[m]); betas[m] = (round(float(beta[1]), 5), round(float(beta[2]), 5))
-        effD = lambda r: beta[2] * rating(r[3], r[1], BLEND) + beta[4 + N + IDX[r[3]]]       # what this offense's opponent (defense) does to y
-        effO = lambda r: beta[1] * rating(r[2], r[1], BLEND) + beta[4 + IDX[r[2]]]           # what this defense's opponent (offense) does to y
+        effD = lambda r: beta[2] * r_def(r[3], r[1], BLEND) + beta[4 + N + IDX[r[3]]]        # what this offense's opponent (defense) does to y
+        effO = lambda r: beta[1] * r_off(r[2], r[1], BLEND) + beta[4 + IDX[r[2]]]            # what this defense's opponent (offense) does to y
     rows = FBS_ROWS[m]; W = np.array([r[6] for r in rows])
     cD = np.average([effD(r) for r in rows], weights=W); cO = np.average([effO(r) for r in rows], weights=W)
     for t in TEAMS:
@@ -271,9 +297,11 @@ D['teamsAdj'] = TA
 D['meta']['oppAdj'] = {'blend': BLEND, 'note': (('Schedule-adjusted by opposing unit: each stat is judged against what the units a team faced did to everyone else '
                        '(team stats, shrunk). An opponent offense missing its starting QB counts as weaker that game (the user\'s QB adjustments), so defenses that '
                        'faced a backup get less credit. Strength of schedule uses each opponent\'s power rating from the week of the game.') if UNIT_QB else
+                       ('Opponent-adjusted by opposing unit strength: each opponent offense / defense is rated by its SP+ offense / defense rating '
+                       '(CollegeFootballData), plus a shrunk per-unit correction from the play-by-play. Strength of schedule uses your power ratings. FBS-vs-FBS games only.') if SP_MODE else
                        ('Opponent-adjusted using the power ratings (blend of each opponent\'s rating going into that week and its current rating) '
                        'plus a shrunk per-unit correction from the play-by-play.' + (' FBS-vs-FBS games only.' if LG == 'cfb' else ''))),
-                       'method': 'unit+qb' if UNIT_QB else 'ratings+unit', 'qbAdjustments': ({'games': [{'week': q['week'], 'team': q['team']} for q in RT.get('qbGames', [])],          # no point values (private ratings)
+                       'method': 'unit+qb' if UNIT_QB else ('sp+unit' if SP_MODE else 'ratings+unit'), 'qbAdjustments': ({'games': [{'week': q['week'], 'team': q['team']} for q in RT.get('qbGames', [])],          # no point values (private ratings)
                                           'season': [{'team': q['team'], 'fromWeek': q['fromWeek']} for q in RT.get('qbSeason', [])]} if UNIT_QB else None),
                        'ratingsThroughWeek': RT['lastWeekGraded'], 'betas': betas,
                        'composite': COMP, 'rushComposite': RUSH, 'passComposite': PASS,
