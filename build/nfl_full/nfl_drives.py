@@ -109,6 +109,9 @@ def build_drives(g):
             kt=pr.iloc[0].desc; kick='Kickoff' if 'kicks' in kt else 'Punt'
             res=('Muffed ' if 'MUFF' in kt.upper() else 'Fumbled ')+kick
             if ((pr.touchdown.fillna(0)==1)&(pr.td_team!=team)).any(): res+=' (TD)'
+        # a turnover the feed files as the drive result but the play ended in a safety (2026_12_CHI_DET: Williams' sack-fumble, Lions
+        # recovery wiped out by Chicago's illegal bat in the end zone = safety) -> Safety
+        if res in ('Fumble', 'Interception') and 'safety' in pr and (pr.safety.fillna(0) == 1).any(): res = 'Safety'
         d={'n':float(fd),'team':NAME[team],'opponent':NAME[opp],'how':how,
            'q1':int(f0.drive_quarter_start),'t1':f0.drive_game_clock_start,'spot1':spot_from(f0.drive_start_yard_line,team),
            'q2':last_q,'t2':f0.drive_game_clock_end,'spot2':spot_from(f0.drive_end_yard_line,team),
